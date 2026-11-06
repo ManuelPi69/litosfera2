@@ -1,0 +1,1200 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Litosfera Viva</title>
+<meta name="description" content="Modelo 3D/VR de uma zona de subducção com estratovulcão ativo: trilha de aprendizagem em Geografia Física e Geologia.">
+<style>
+:root{color-scheme:dark;
+  --bg:#0a1020; --panel:rgba(14,20,38,.92); --line:#27314f; --ink:#e8edf8; --mut:#9aa7c7;
+  --lava:#ff6a2b; --lava2:#ffb347; --ok:#3ddc97; --bad:#ff5a5f; --blue:#4aa3ff;
+  --r:12px; --gut:16px; --pw:400px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;outline:none}
+
+#top{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px var(--gut);pointer-events:none}
+#top>*{pointer-events:auto}
+.brand{display:flex;align-items:baseline;gap:8px;background:var(--panel);border:1px solid var(--line);padding:8px 14px;border-radius:999px;backdrop-filter:blur(8px)}
+.brand b{font-size:16px;letter-spacing:.2px}
+.brand small{color:var(--mut);font-size:12px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--lava);box-shadow:0 0 10px var(--lava);align-self:center}
+.actions{display:flex;gap:8px}
+button{font:inherit;color:var(--ink);cursor:pointer}
+.actions button{background:var(--panel);border:1px solid var(--line);padding:9px 14px;border-radius:999px;backdrop-filter:blur(8px)}
+.actions .vr{background:linear-gradient(135deg,#ff6a2b,#d63a1f);border-color:transparent;font-weight:600}
+.actions .vr:disabled{background:var(--panel);border-color:var(--line);color:var(--mut);cursor:default}
+.actions button:hover:not(:disabled){filter:brightness(1.15)}
+
+#panel{position:fixed;z-index:4;top:64px;right:var(--gut);bottom:var(--gut);width:var(--pw);max-width:calc(100vw - 2*var(--gut));display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:16px;backdrop-filter:blur(10px);overflow:hidden;transition:transform .25s ease,opacity .25s}
+#panel.closed{transform:translateX(calc(100% + 24px));opacity:0;pointer-events:none}
+#tabs{display:flex;gap:4px;padding:8px;overflow-x:auto;border-bottom:1px solid var(--line);scrollbar-width:none;flex:none}
+#tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;background:transparent;border:1px solid transparent;border-radius:10px;padding:6px 10px;text-align:left;color:var(--mut);min-width:84px}
+.tab span{display:block;font-weight:600;font-size:13px}
+.tab small{display:block;font-size:11px;opacity:.8;white-space:nowrap}
+.tab.on{background:rgba(255,106,43,.14);border-color:rgba(255,106,43,.6);color:var(--ink)}
+#body{flex:1;overflow-y:auto;padding:14px 16px 20px;-webkit-overflow-scrolling:touch}
+#body h3{margin:16px 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--lava2)}
+#body h3:first-child{margin-top:0}
+#body p{margin:6px 0 10px;color:#cfd7ec}
+#body p.ok{color:var(--ok)} #body p.bad{color:var(--bad)}
+.row{margin:10px 0}
+.row>label{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--mut);margin-bottom:4px}
+.row>label b{color:var(--ink);font-weight:600}
+input[type=range]{width:100%;height:28px;accent-color:var(--lava);background:transparent}
+.tog{display:flex;align-items:center;gap:8px;margin:8px 0;cursor:pointer;color:#cfd7ec}
+.tog input{width:20px;height:20px;accent-color:var(--lava)}
+.btn{display:block;width:100%;margin:8px 0;padding:11px 14px;border-radius:10px;border:1px solid var(--line);background:#1a2340;font-weight:600}
+.btn:hover{background:#222d52}
+.btn.hot{background:linear-gradient(135deg,#ff6a2b,#d63a1f);border-color:transparent}
+.seg{display:flex;gap:4px;flex-wrap:wrap}
+.seg button{flex:1;min-width:80px;padding:8px 6px;border-radius:9px;border:1px solid var(--line);background:#141c36;font-size:13px}
+.seg button.on{background:rgba(255,106,43,.2);border-color:var(--lava)}
+.bar{height:10px;background:#141c36;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--lava2);transition:width .2s}
+.tasks{list-style:none;margin:10px 0;padding:10px 12px;background:#101731;border:1px solid var(--line);border-radius:10px}
+.tasks li{padding:3px 0;color:var(--mut);font-size:14px} .tasks li.done{color:var(--ok)}
+.ro{margin:8px 0;padding:10px 12px;background:#101731;border:1px solid var(--line);border-radius:10px;font-size:13px;white-space:pre-line;color:#cfd7ec}
+.choice{display:block;width:100%;text-align:left;margin:6px 0;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:#141c36;line-height:1.35}
+.choice:hover{background:#1c2748}
+.choice.ok{border-color:var(--ok);background:rgba(61,220,151,.14)}
+.choice.bad{border-color:var(--bad);background:rgba(255,90,95,.14)}
+
+#toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);z-index:6;max-width:min(560px,calc(100vw - 32px));background:rgba(255,179,71,.96);color:#1b1206;padding:10px 16px;border-radius:12px;font-weight:600;opacity:0;pointer-events:none;transition:.25s}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#vrMsg{margin:0;padding:0 16px 10px;font-size:12px;color:var(--mut);flex:none}
+#vrMsg:empty{display:none}
+
+#boot{position:fixed;inset:0;z-index:20;display:grid;place-items:center;text-align:center;background:var(--bg);transition:opacity .5s}
+#boot.off{opacity:0;pointer-events:none}
+.spin{width:42px;height:42px;margin:0 auto 12px;border-radius:50%;border:4px solid #27314f;border-top-color:var(--lava);animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+@media (max-width:820px){
+  .brand small{display:none}
+  .actions .ghost#btnView{display:none}
+  #panel{top:auto;left:8px;right:8px;bottom:8px;width:auto;max-width:none;height:46vh;max-height:46vh}
+  #panel.closed{transform:translateY(calc(100% + 16px))}
+  #toast{bottom:calc(46vh + 20px)}
+}
+@media (max-width:820px) and (orientation:landscape){
+  #panel{left:auto;width:min(380px,48vw);top:56px;height:auto;max-height:none}
+  #toast{bottom:16px}
+}
+
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<header id="top">
+  <div class="brand"><span class="dot"></span><b>Litosfera Viva</b><small>Tectônica &amp; Erupção</small></div>
+  <div class="actions">
+    <button id="btnView" class="ghost" title="Recentrar a câmera">⌖ Recentrar</button>
+    <button id="vrBtn" class="vr" disabled>Verificando VR…</button>
+    <button id="toggle" class="ghost" title="Mostrar/ocultar painel">☰</button>
+  </div>
+</header>
+
+<aside id="panel">
+  <nav id="tabs" aria-label="Trilha de aprendizagem"></nav>
+  <div id="body"></div>
+  <p id="vrMsg" role="status"></p>
+</aside>
+
+<div id="toast" role="status"></div>
+<div id="boot"><div><div class="spin"></div><p id="bootMsg">Carregando o planeta…</p></div></div>
+
+<script>
+/* three.js r128 por CDN (com planos B); depois executa os módulos embutidos na ordem */
+(function () {
+  var urls = ["https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js",
+              "https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js",
+              "https://unpkg.com/three@0.128.0/build/three.min.js"];
+  var msg = document.getElementById("bootMsg");
+  function fail(t) { msg.textContent = t; }
+  function load(src, ok, err) { var s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = err; document.head.appendChild(s); }
+  function runModules() {
+    try {
+      document.querySelectorAll('script[type="text/x-app"]').forEach(function (el) {
+        var s = document.createElement("script"); s.textContent = el.textContent; document.head.appendChild(s);
+      });
+    } catch (e) { return fail("Erro ao iniciar o app: " + e.message); }
+    var b = document.getElementById("boot"); b.classList.add("off");
+    setTimeout(function () { b.style.display = "none"; }, 600);
+  }
+  function tryThree(i) {
+    if (window.THREE) return runModules();
+    if (i >= urls.length) return fail("Não foi possível carregar o Three.js. Verifique a conexão com a internet e recarregue a página.");
+    load(urls[i], function () { window.THREE ? runModules() : tryThree(i + 1); }, function () { tryThree(i + 1); });
+  }
+  tryThree(0);
+})();
+</script>
+<script type="text/x-app" data-name="data">
+/* Litosfera Viva — estado global, conteúdo pedagógico e cálculos geofísicos simplificados */
+window.APP = {
+  P: { // parâmetros controlados pelo estudante
+    temp: 1000, press: 1.5, silica: 63, water: 5,
+    conv: 1, mag: 6.5, depth: 1, rain: false, fric: 0.6,
+    auto: true, xray: true, faults: true, convOn: true, labels: true, water3d: true, soil: false, seis: true
+  },
+  S: { step: 0, view: 'macro', overp: 0, strain: 0, vr: false, ans: {}, micro: false, dive: false },
+  tasks: {},
+  clamp: (v, a, b) => Math.max(a, Math.min(b, v)),
+  mark(id) { if (!this.tasks[id]) { this.tasks[id] = true; this.dirty = true; try { localStorage.setItem('litos_tasks', JSON.stringify(this.tasks)); } catch (e) {} } },
+  dirty: true,
+
+  // Viscosidade (log10 Pa·s) e índice de explosividade — modelo didático, não preditivo
+  derive() {
+    const p = this.P, c = this.clamp;
+    const le = c(2 + 0.22 * (p.silica - 48) + (1200 - p.temp) * 0.0055 * (1 + (p.silica - 48) / 20) - 0.35 * p.water, 1, 12);
+    const s = c((le - 2) / 7, 0, 1);
+    const E = c((le - 2) / 8 * 0.5 + p.water / 8 * 0.4 + (p.press - 0.1) / 3 * 0.15, 0, 1);
+    return {
+      le, s, E, eta: Math.pow(10, le),
+      vei: c(Math.round(1 + E * 6), 1, 7),
+      style: E < 0.3 ? 'efusiva' : (E < 0.5 ? 'mista (vulcaniana)' : 'explosiva (pliniana)'),
+      name: p.silica < 52 ? 'Máfico (basalto)' : (p.silica < 63 ? 'Intermediário (andesito)' : 'Félsico (dacito/riolito)'),
+      cone: s < 0.25 ? 'vulcão em escudo (suave)' : (s < 0.6 ? 'estratovulcão' : 'estratovulcão íngreme / domo')
+    };
+  },
+
+  steps: [
+    { id: 0, title: 'Início', sub: 'Visão geral',
+      text: 'Este é um bloco-diagrama vivo de uma zona de subducção: a placa oceânica mergulha sob a placa continental, a água liberada pela placa funde o manto e alimenta um estratovulcão. Gire, aproxime e explore. Siga a trilha nas etapas 1 → 2 → 3 → Quiz.' },
+    { id: 1, title: 'Etapa 1', sub: 'Imersão no subsolo',
+      text: 'Observe as correntes de convecção do manto (partículas quentes sobem, frias descem) e a fricção entre as placas. Mergulhe no manto, use o microscópio no contato entre as placas e provoque terremotos.' },
+    { id: 2, title: 'Etapa 2', sub: 'Laboratório vulcânico',
+      text: 'Manipule a composição do magma (sílica), temperatura, pressão e gases. Veja como a viscosidade muda a forma do cone e o tipo de erupção: efusiva (lava fluida) ou explosiva (coluna de cinzas e correntes piroclásticas).' },
+    { id: 3, title: 'Etapa 3', sub: 'Geoprocessamento de risco',
+      text: 'Mapa do entorno do vulcão. Rode a simulação de correntes piroclásticas e lahares, identifique as áreas de perigo e trace rotas de evacuação seguras da vila até um abrigo.' },
+    { id: 4, title: 'Quiz', sub: 'Avaliação formativa',
+      text: 'Responda às duas questões e leia o gabarito comentado.' }
+  ],
+
+  tasksByStep: {
+    1: [['dive', 'Mergulhar no manto'], ['micro', 'Usar o microscópio na falha'], ['quake', 'Ativar um evento sísmico'], ['conv', 'Alterar a temperatura e observar a convecção']],
+    2: [['mafic', 'Erupção efusiva com magma máfico'], ['felsic', 'Erupção explosiva com magma félsico'], ['rain', 'Ativar chuva intensa (lahar)']],
+    3: [['sim', 'Rodar a simulação de perigo'], ['route', 'Traçar uma rota até um abrigo'], ['safe', 'Evacuar com sucesso']]
+  },
+
+  quiz: [
+    { q: 'Por que vulcões formados em zonas de subducção tendem a apresentar erupções predominantemente explosivas?',
+      o: ['O magma é extremamente fluido, permitindo a saída rápida dos gases.',
+          'A fusão parcial da crosta subductada gera magma rico em sílica e gases pressurizados, aumentando a viscosidade e a pressão.',
+          'A presença de água do oceano resfria totalmente o manto, impedindo o acúmulo de energia.',
+          'As placas se afastam, abrindo fissuras por onde o magma escorre suavemente.'],
+      c: 1,
+      fb: 'A crosta continental absorvida enriquece o magma em sílica, tornando-o viscoso e retendo gases sob alta pressão até que a explosão ocorra.' },
+    { q: 'O que justifica a alta densidade demográfica em encostas de vulcões ativos, a despeito dos riscos geotécnicos?',
+      o: ['A ausência de leis de zoneamento ambiental em áreas tectônicas.',
+          'A fertilidade dos solos vulcânicos (andossolos), ricos em minerais essenciais para a agricultura.',
+          'O clima mais frio do topo dos vulcões atrai a especulação imobiliária.',
+          'A facilidade de extração de gás natural diretamente da cratera.'],
+      c: 1,
+      fb: 'O intemperismo das cinzas vulcânicas produz solos altamente férteis, atraindo populações agrícolas historicamente.' }
+  ]
+};
+try { const t = JSON.parse(localStorage.getItem('litos_tasks') || '{}'); APP.tasks = t; } catch (e) {}
+
+</script>
+<script type="text/x-app" data-name="world">
+/* Bloco-diagrama: placas, água, falhas, rótulos. Coordenadas: x leste, y cima, z para o observador. */
+(function () {
+  const T = THREE, A = APP;
+
+  // Topo da placa oceânica (linha de subducção) em função de x
+  A.slabY = x => x < -4.5 ? -0.9 : (x < -3.2 ? -0.9 - (x + 4.5) / 1.3 * 0.4 : -1.3 - 0.53 * (x + 3.2));
+  A.SLAB_ANGLE = Math.atan(0.53);
+
+  function shape(pts) {
+    const s = new T.Shape();
+    pts.forEach((p, i) => i ? s.lineTo(p[0], p[1]) : s.moveTo(p[0], p[1]));
+    return s;
+  }
+  function layer(pts, color, idx, extra) {
+    const g = new T.ExtrudeGeometry(shape(pts), { depth: 8 + idx * 0.02, bevelEnabled: false });
+    g.translate(0, 0, -4);
+    const m = new T.MeshLambertMaterial(Object.assign({ color }, extra || {}));
+    return new T.Mesh(g, m);
+  }
+  function tube(pts, r, color) {
+    const c = new T.CatmullRomCurve3(pts.map(p => new T.Vector3(p[0], p[1], p[2] || 4.14)));
+    const m = new T.MeshBasicMaterial({ color });
+    return new T.Mesh(new T.TubeGeometry(c, 40, r, 6, false), m);
+  }
+  A.makeLabel = function (text, x, y, z, sc) {
+    const cv = document.createElement('canvas'); cv.width = 512; cv.height = 96;
+    const g = cv.getContext('2d');
+    g.font = 'bold 40px system-ui,sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    const w = Math.min(500, g.measureText(text).width + 36);
+    g.fillStyle = 'rgba(10,14,24,.78)'; g.beginPath(); g.roundRect ? g.roundRect(256 - w / 2, 8, w, 80, 24) : g.rect(256 - w / 2, 8, w, 80); g.fill();
+    g.fillStyle = '#fff'; g.fillText(text, 256, 49, 480);
+    const sp = new T.Sprite(new T.SpriteMaterial({ map: new T.CanvasTexture(cv), depthTest: false, transparent: true }));
+    sp.scale.set(5.2 * (sc || 1), 5.2 * (sc || 1) * 96 / 512, 1); sp.position.set(x, y, z); sp.renderOrder = 20;
+    return sp;
+  };
+
+  A.initWorld = function () {
+    const W = A.world = new T.Group();
+    const L = A.layers = {};
+
+    // Manto (translúcido para enxergar a convecção)
+    L.mantle = layer([[-10, -11], [10, -11], [10, -1], [-10, -1]], 0xd9531e, 0, { transparent: true, opacity: 0.5, depthWrite: false });
+    const slabTop = [[-10, -0.9], [-4.5, -0.9], [-3.2, -1.3], [10, A.slabY(10)]];
+    const off = (pts, d) => pts.map(p => [p[0], p[1] - d]);
+    const slabPoly = slabTop.concat(off(slabTop, 1.1).reverse());
+    const crustPoly = slabTop.concat(off(slabTop, 0.3).reverse());
+
+    L.slab = new T.Group();
+    L.slab.add(layer(slabPoly, 0x3d4f73, 1), layer(crustPoly, 0x1c2430, 2));
+    const cont = [[10, 0.4], [-1, 0.4], [-2.2, -0.3], [-3.2, -1.3], [10, A.slabY(10)]];
+    L.cont = layer(cont, 0x6e5b49, 3);
+    L.ccrust = layer([[10, 0.4], [-1, 0.4], [-2.2, -0.3], [-2.9, -1.0], [10, -1.0]], 0xb09672, 4);
+    L.water = layer([[-10, 0], [-1.6, 0], [-2.2, -0.3], [-3.2, -1.3], [-4.5, -0.9], [-10, -0.9]], 0x2a86e0, 5, { transparent: true, opacity: 0.42, depthWrite: false });
+    L.waterTop = new T.Mesh(new T.BoxGeometry(8.4, 0.02, 8), new T.MeshLambertMaterial({ color: 0x57b0ff, transparent: true, opacity: 0.5 }));
+    L.waterTop.position.set(-5.8, 0.01, 0);
+    L.ground = new T.Mesh(new T.BoxGeometry(11, 0.06, 8), new T.MeshLambertMaterial({ color: 0x5f8f4a }));
+    L.ground.position.set(4.5, 0.43, 0);
+    // Andossolos (solo vulcânico fértil) — anel ao redor do vulcão
+    L.soil = new T.Mesh(new T.RingGeometry(1.2, 3.9, 48), new T.MeshLambertMaterial({ color: 0x3a2a1c, side: T.DoubleSide, transparent: true, opacity: 0.9 }));
+    L.soil.rotation.x = -Math.PI / 2; L.soil.position.set(3, 0.5, 0); L.soil.visible = false;
+
+    W.add(L.mantle, L.slab, L.cont, L.ccrust, L.water, L.waterTop, L.ground, L.soil);
+
+    // Falhas geológicas (tubos brilhantes sobre o corte frontal)
+    const F = A.faultGroup = new T.Group();
+    A.faultMat = [];
+    const mega = [], x0 = -3.2;
+    for (let i = 0; i <= 10; i++) { const x = x0 + i * 1.3; mega.push([x, A.slabY(x) + 0.02]); }
+    const fl = [tube(mega, 0.07, 0xff3b30), tube([[-2.6, -1.7], [-1.6, -0.8], [-0.7, 0.1], [-0.3, 0.4]], 0.045, 0xffb020),
+      tube([[0.8, 0.4], [1.1, -0.3], [1.5, -1.0]], 0.04, 0xffb020), tube([[6.0, 0.4], [6.8, -0.5], [7.8, -1.0]], 0.04, 0xffb020),
+      tube([[8.2, 0.4], [8.5, -0.4], [9.2, -1.0]], 0.04, 0xffb020)];
+    fl.forEach(m => F.add(m)); A.faultMeshes = fl;
+    W.add(F);
+
+    // Rótulos
+    A.labelGroup = new T.Group();
+    [['Placa oceânica', -7, 1.1, 4.3], ['Placa continental', 7.4, 1.5, 4.3], ['Fossa oceânica', -3.4, -2.3, 4.3, 0.85],
+      ['Manto astenosférico', -5.5, -7.5, 4.3], ['Cunha do manto (fusão parcial)', 4.2, -4.3, 4.3, 0.95],
+      ['Litosfera subductada (slab)', 6.2, -7.2, 4.3, 0.95], ['Megafalha (contato entre placas)', -0.2, -3.0, 4.3, 0.9],
+      ['Câmara magmática', 3, -1.9, 4.3, 0.9]].forEach(a => A.labelGroup.add(A.makeLabel(a[0], a[1], a[2], a[3], a[4])));
+    W.add(A.labelGroup);
+  };
+
+  A.worldUpdate = function (dt, t) {
+    const P = A.P, L = A.layers;
+    A.faultGroup.visible = P.faults; A.labelGroup.visible = P.labels;
+    L.water.visible = L.waterTop.visible = P.water3d; L.soil.visible = P.soil;
+    // cor do manto muda com a temperatura
+    const k = A.clamp((P.temp - 800) / 600, 0, 1);
+    L.mantle.material.color.setRGB(0.45 + 0.55 * k, 0.17 + 0.17 * k, 0.1);
+    // ondulação da água e rebote da placa (terremoto)
+    const Q = A.Q || { slip: 0, tsu: 0 };
+    L.waterTop.position.y = 0.01 + Math.sin(t * 1.5) * 0.015 + Q.tsu * 0.25 * Math.sin(t * 6);
+    L.water.scale.y = 1 + Q.tsu * 0.1 * Math.sin(t * 6);
+    const d = Q.slip * 0.35;
+    L.slab.position.set(Math.cos(A.SLAB_ANGLE) * d, -Math.sin(A.SLAB_ANGLE) * d, 0);
+    const pulse = 1 + (Q.amp || 0) * 2;
+    A.faultMeshes.forEach(m => m.scale.set(1, 1, 1).multiplyScalar(1)); // mantém geometria
+    A.faultMeshes[0].material.color.setRGB(1, 0.23 + Math.min(0.7, (A.S.strain || 0) * 0.5), 0.19);
+    A.faultMeshes.forEach(m => m.material.opacity = 1);
+  };
+})();
+
+</script>
+<script type="text/x-app" data-name="volcano">
+/* Estratovulcão: cone (forma depende da viscosidade), câmara magmática, erupção (efusiva/explosiva), PDC e lahar */
+(function () {
+  const T = THREE, A = APP;
+  const VX = 3, GY = 0.46; // posição do vulcão e topo do solo
+  let cone, chamber, dike, glow, light, lastKey = '';
+  const V = A.V = { t: -1, dur: 0, mode: 'efusiva', act: 0, H: 2, R: 3.4, k: 1, cr: 0.35, lahar: 0, acc: { a: 0, f: 0, p: 0, l: 0, v: 0 } };
+
+  A.coneY = r => r >= V.R ? 0 : V.H * Math.pow(1 - r / V.R, V.k);
+  A.craterPos = new T.Vector3(VX, GY + 2, 0);
+
+  function dotTex() {
+    const c = document.createElement('canvas'); c.width = c.height = 64;
+    const g = c.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.5, 'rgba(255,255,255,.55)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return new T.CanvasTexture(c);
+  }
+  A.dotTex = dotTex;
+
+  // Pool de partículas simples
+  class Pool {
+    constructor(n, size, additive, tex) {
+      this.n = n; this.i = 0;
+      this.pos = new Float32Array(n * 3).fill(999); this.col = new Float32Array(n * 3);
+      this.vel = new Float32Array(n * 3); this.life = new Float32Array(n); this.age = new Float32Array(n);
+      this.kind = new Uint8Array(n); this.az = new Float32Array(n); this.rr = new Float32Array(n); this.sp = new Float32Array(n);
+      const g = new T.BufferGeometry();
+      g.setAttribute('position', new T.BufferAttribute(this.pos, 3)); g.setAttribute('color', new T.BufferAttribute(this.col, 3));
+      this.mat = new T.PointsMaterial({ size, map: tex, vertexColors: true, transparent: true, depthWrite: false, sizeAttenuation: true, blending: additive ? T.AdditiveBlending : T.NormalBlending });
+      this.pts = new T.Points(g, this.mat); this.pts.frustumCulled = false; this.g = g;
+    }
+    spawn(x, y, z, vx, vy, vz, life, r, g, b, kind) {
+      const i = this.i = (this.i + 1) % this.n, j = i * 3;
+      this.pos[j] = x; this.pos[j + 1] = y; this.pos[j + 2] = z; this.vel[j] = vx; this.vel[j + 1] = vy; this.vel[j + 2] = vz;
+      this.col[j] = r; this.col[j + 1] = g; this.col[j + 2] = b; this.life[i] = life; this.age[i] = 0; this.kind[i] = kind || 0;
+      return i;
+    }
+  }
+
+  function rebuildCone() {
+    const d = A.derive(), s = d.s;
+    V.H = 0.9 + s * 2.1; V.R = 3.9 - s * 0.9; V.k = 0.9 + 1.1 * s; V.cr = 0.28 + 0.2 * s;
+    const pts = [new T.Vector2(0.001, GY + V.H - 0.18)];
+    const n = 28;
+    for (let i = 0; i <= n; i++) {
+      const r = V.cr + (V.R - V.cr) * i / n;
+      pts.push(new T.Vector2(r, GY + A.coneY(r) + (i === 0 ? 0.02 : 0)));
+    }
+    pts[1].y += 0.0;
+    const g = new T.LatheGeometry(pts, 48);
+    if (cone) { cone.geometry.dispose(); cone.geometry = g; }
+    else {
+      cone = new T.Mesh(g, new T.MeshLambertMaterial({ color: 0x6a5648, side: T.DoubleSide }));
+      cone.position.x = VX; A.world.add(cone);
+    }
+    cone.material.color.setRGB(0.42 - 0.12 * s, 0.34 - 0.1 * s, 0.28 - 0.08 * s);
+    A.craterPos.set(VX, GY + V.H - 0.1, 0);
+    if (glow) glow.position.copy(A.craterPos);
+    A.mapDirty = true;
+  }
+
+  A.initVolcano = function () {
+    const W = A.world, tex = dotTex();
+    const hot = new T.MeshBasicMaterial({ color: 0xff5a1a, transparent: true, opacity: 0.92 });
+    chamber = new T.Mesh(new T.SphereGeometry(0.9, 24, 16), hot); chamber.scale.set(1.35, 0.8, 1.35); chamber.position.set(VX, -2.2, 0);
+    const curve = new T.CatmullRomCurve3([new T.Vector3(VX + 0.5, -4.5, 0), new T.Vector3(VX + 0.2, -3.5, 0), new T.Vector3(VX, -2.6, 0)]);
+    dike = new T.Mesh(new T.TubeGeometry(curve, 16, 0.07, 6), hot);
+    const cond = new T.Mesh(new T.CylinderGeometry(0.1, 0.14, 2.7, 10), hot); cond.position.set(VX, -0.85, 0);
+    A.magmaMat = hot; A.magmaParts = [chamber, dike, cond];
+    W.add(chamber, dike, cond);
+    glow = new T.Sprite(new T.SpriteMaterial({ map: tex, color: 0xff6a20, blending: T.AdditiveBlending, transparent: true, depthWrite: false }));
+    glow.scale.set(2.4, 2.4, 1); W.add(glow);
+    light = new T.PointLight(0xff7a30, 0, 14); W.add(light);
+    A.ash = new Pool(1500, 0.34, false, tex); A.fire = new Pool(500, 0.22, true, tex); A.flow = new Pool(1000, 0.3, false, tex);
+    W.add(A.ash.pts, A.fire.pts, A.flow.pts);
+    rebuildCone(); light.position.copy(A.craterPos).y += 0.5;
+    // raios-X: crosta translúcida para ver o sistema magmático em 3D
+    A.setXray = on => { [A.layers.cont, A.layers.ccrust].forEach(m => { m.material.transparent = on; m.material.opacity = on ? 0.3 : 1; m.material.depthWrite = !on; }); };
+    A.setXray(true);
+  };
+
+  A.erupt = function () {
+    if (V.t >= 0) return;
+    const d = A.derive(); V.t = 0; V.mode = d.E < 0.3 ? 'efusiva' : (d.E < 0.5 ? 'mista' : 'explosiva');
+    V.dur = V.mode === 'efusiva' ? 14 : (V.mode === 'mista' ? 10 : 12); V.E = d.E; V.s = d.s;
+    A.S.overp = 0.1; V.acc = { a: 0, f: 0, p: 0, l: 0, v: 0 };
+    if (V.mode === 'efusiva' && A.P.silica < 52) A.mark('mafic');
+    if (V.mode === 'explosiva' && A.P.silica >= 63) A.mark('felsic');
+    if (A.onErupt) A.onErupt(V.mode);
+  };
+
+  function surf(az, r) { return [VX + Math.cos(az) * r, GY + 0.06 + A.coneY(r), Math.sin(az) * r]; }
+
+  A.volcanoUpdate = function (dt, t) {
+    const P = A.P, S = A.S, d = A.derive();
+    const key = [P.silica, P.temp, P.water, P.press].join();
+    if (key !== lastKey) { lastKey = key; rebuildCone(); }
+    // pressão da câmara: gases + viscosidade elevam a sobrepressão
+    if (V.t < 0) {
+      S.overp = Math.min(1, S.overp + dt * (0.012 + P.water * 0.006 + (d.le - 2) * 0.004) * (0.5 + P.press / 2));
+      if (S.overp >= 1 && S.step === 2 && P.auto) A.erupt();
+    }
+    // magma: cor pela temperatura, câmara incha com a pressão
+    const k = A.clamp((P.temp - 800) / 600, 0, 1);
+    A.magmaMat.color.setRGB(1, 0.2 + 0.6 * k, 0.05 + 0.2 * k);
+    const inf = 1 + 0.22 * S.overp + 0.03 * Math.sin(t * 3);
+    chamber.scale.set(1.35 * inf, 0.8 * inf, 1.35 * inf);
+    let act = 0;
+    if (V.t >= 0) {
+      V.t += dt; const u = V.t / V.dur; act = u < 0.15 ? u / 0.15 : (u < 0.8 ? 1 : Math.max(0, (1 - u) / 0.2));
+      const ex = V.mode, c = A.craterPos, ac = V.acc;
+      const rate = (n, key) => { ac[key] += dt * n * act; const m = Math.floor(ac[key]); ac[key] -= m; return m; };
+      if (ex !== 'efusiva') {
+        const sc = ex === 'explosiva' ? 1 : 0.55;
+        for (let i = rate(160 * sc, 'a'); i > 0; i--) {
+          const a = Math.random() * 6.28, sp = Math.random() * 0.7;
+          A.ash.spawn(c.x, c.y, c.z, Math.cos(a) * sp, (5 + Math.random() * 3 + V.E * 3) * sc, Math.sin(a) * sp, 7 + Math.random() * 3, 0.32, 0.3, 0.3, 1);
+        }
+        for (let i = rate(40 * sc, 'f'); i > 0; i--) {
+          const a = Math.random() * 6.28, sp = 1 + Math.random() * 2.2;
+          A.fire.spawn(c.x, c.y, c.z, Math.cos(a) * sp, 3 + Math.random() * 4, Math.sin(a) * sp, 3, 1, 0.45, 0.1, 2);
+        }
+        if (V.t > V.dur * 0.2) for (let i = rate(ex === 'explosiva' ? 130 : 30, 'p'); i > 0; i--) {
+          const az = Math.random() * 6.28, i2 = A.flow.spawn(0, 0, 0, 0, 0, 0, 9, 0.55, 0.5, 0.48, 1);
+          A.flow.az[i2] = az; A.flow.rr[i2] = V.cr; A.flow.sp[i2] = 2.2 + Math.random() * 1.6;
+        }
+      } else {
+        for (let i = rate(14, 'f'); i > 0; i--)
+          A.fire.spawn(c.x, c.y, c.z, (Math.random() - 0.5) * 0.8, 2 + Math.random() * 1.6, (Math.random() - 0.5) * 0.8, 1.6, 1, 0.5, 0.1, 2);
+        for (let i = rate(22, 'v'); i > 0; i--) {
+          const dirs = [0.4, 2.9, 4.6], az = dirs[(Math.random() * 3) | 0] + (Math.random() - 0.5) * 0.18;
+          const i2 = A.flow.spawn(0, 0, 0, 0, 0, 0, 16, 1, 0.38, 0.05, 0);
+          A.flow.az[i2] = az; A.flow.rr[i2] = V.cr; A.flow.sp[i2] = 0.45 + (1 - V.s) * 0.5 + Math.random() * 0.2;
+        }
+      }
+      if (P.rain) for (let i = rate(40, 'l'); i > 0; i--) {
+        const dirs = [1.3, 3.8, 5.4], az = dirs[(Math.random() * 3) | 0] + (Math.random() - 0.5) * 0.12;
+        const i2 = A.flow.spawn(0, 0, 0, 0, 0, 0, 12, 0.45, 0.32, 0.22, 3);
+        A.flow.az[i2] = az; A.flow.rr[i2] = V.cr + 0.3; A.flow.sp[i2] = 1.6 + Math.random() * 0.8; A.mark('rain');
+      }
+      if (V.t >= V.dur) V.t = -1;
+    }
+    V.act += (act - V.act) * Math.min(1, dt * 4);
+    glow.material.opacity = A.clamp(0.25 + V.act * 0.75 + (S.overp > 0.85 ? 0.2 : 0), 0, 1); glow.scale.setScalar(1.2 + V.act * 3.2);
+    light.intensity = 0.1 + V.act * 2.2;
+
+    // física das partículas
+    const wind = 0.7;
+    for (const pool of [A.ash, A.fire]) {
+      const p = pool.pos, v = pool.vel, g = pool === A.ash ? 2.0 : 6.5;
+      for (let i = 0; i < pool.n; i++) {
+        if (pool.life[i] <= 0) continue;
+        pool.age[i] += dt; if (pool.age[i] > pool.life[i]) { pool.life[i] = 0; p[i * 3 + 1] = 999; continue; }
+        const j = i * 3; v[j + 1] -= g * dt; if (pool === A.ash) { v[j] += (wind - v[j]) * dt * 0.6; v[j + 1] *= 1 - dt * 0.15; }
+        p[j] += v[j] * dt; p[j + 1] += v[j + 1] * dt; p[j + 2] += v[j + 2] * dt;
+        if (pool === A.fire && p[j + 1] < GY + A.coneY(Math.hypot(p[j] - VX, p[j + 2]))) pool.life[i] = 0;
+        const f = pool.age[i] / pool.life[i];
+        if (pool === A.ash) { const c = 0.32 + f * 0.25; pool.col[j] = c; pool.col[j + 1] = c * 0.97; pool.col[j + 2] = c * 0.95; }
+        else { pool.col[j + 1] = 0.45 - 0.35 * f; pool.col[j + 2] = 0.1 * (1 - f); }
+      }
+      pool.g.attributes.position.needsUpdate = pool.g.attributes.color.needsUpdate = true;
+    }
+    const F = A.flow;
+    for (let i = 0; i < F.n; i++) {
+      if (F.life[i] <= 0) continue;
+      F.age[i] += dt; if (F.age[i] > F.life[i]) { F.life[i] = 0; F.pos[i * 3 + 1] = 999; continue; }
+      const k2 = F.kind[i], j = i * 3, f = F.age[i] / F.life[i];
+      F.rr[i] += F.sp[i] * dt * (k2 === 1 ? (1 - f * 0.6) : 1);
+      const q = surf(F.az[i], F.rr[i]);
+      F.pos[j] = q[0]; F.pos[j + 1] = q[1] + (k2 === 1 ? 0.08 + Math.sin(i) * 0.05 : 0); F.pos[j + 2] = q[2];
+      if (q[0] < -1 || q[0] > 10 || Math.abs(q[2]) > 4) { F.life[i] = 0; F.pos[j + 1] = 999; continue; }
+      if (k2 === 0) { F.col[j] = 1 - f * 0.6; F.col[j + 1] = 0.38 - f * 0.3; F.col[j + 2] = 0.05; }
+    }
+    F.g.attributes.position.needsUpdate = F.g.attributes.color.needsUpdate = true;
+  };
+})();
+
+</script>
+<script type="text/x-app" data-name="flow">
+/* Convecção do manto, fluidos da subducção, sismos e microscópio (atrito entre placas) */
+(function () {
+  const T = THREE, A = APP;
+  const Q = A.Q = { amp: 0, slip: 0, tsu: 0, t: 0, count: 0, last: '' };
+  let conv, fluid, seis, waves = [], micro = {}, seisT = 0;
+  const NC = 650, NF = 150, NS = 300;
+  const cp = new Float32Array(NC * 3), cc = new Float32Array(NC * 3);
+  const fp = new Float32Array(NF * 3), fc = new Float32Array(NF * 3), fh = new Float32Array(NF);
+  const sp = new Float32Array(NS * 3).fill(999), sc = new Float32Array(NS * 3), sa = new Float32Array(NS).fill(-1);
+  let si = 0;
+
+  function pts(pos, col, size, add) {
+    const g = new T.BufferGeometry();
+    g.setAttribute('position', new T.BufferAttribute(pos, 3)); g.setAttribute('color', new T.BufferAttribute(col, 3));
+    const p = new T.Points(g, new T.PointsMaterial({ size, map: A.dotTex(), vertexColors: true, transparent: true, depthWrite: false, depthTest: false, blending: add ? T.AdditiveBlending : T.NormalBlending }));
+    p.frustumCulled = false; p.renderOrder = 5; return p;
+  }
+  function seedConv(i) {
+    cp[i * 3] = -10 + Math.random() * 20; cp[i * 3 + 1] = -11 + Math.random() * 6; cp[i * 3 + 2] = -3.8 + Math.random() * 8.2;
+  }
+  function seedFluid(i, scatter) {
+    const x = 0.6 + Math.random() * 4; fh[i] = scatter ? Math.random() * 2 : 0;
+    fp[i * 3] = x; fp[i * 3 + 1] = A.slabY(x) + 0.08 + fh[i]; fp[i * 3 + 2] = -3.6 + Math.random() * 7.2;
+  }
+
+  A.initFlow = function () {
+    const W = A.world;
+    for (let i = 0; i < NC; i++) seedConv(i);
+    for (let i = 0; i < NF; i++) seedFluid(i, true);
+    conv = pts(cp, cc, 0.17, false); fluid = pts(fp, fc, 0.16, true); seis = pts(sp, sc, 0.3, true);
+    W.add(conv, fluid, seis);
+    A.convPts = conv;
+    initMicro();
+  };
+
+  A.quake = function (mag, depthIdx, silent) {
+    const hx = [-2.4, 2.2, 7.6][depthIdx], hy = A.slabY(hx) + 0.1, hz = (Math.random() - 0.5) * 2;
+    const k = A.clamp((mag - 3) / 6, 0, 1);
+    Q.amp = Math.max(Q.amp, Math.pow(k, 1.4) * 0.4); Q.slip = Math.max(Q.slip, k); Q.count++;
+    if (mag >= 7 && depthIdx === 0) Q.tsu = 1;
+    A.S.strain = 0;
+    if (waves.length < 4) {
+      [[0xffd24a, 6.5], [0xff4a3a, 3.6]].forEach(w => {
+        const m = new T.Mesh(new T.SphereGeometry(1, 20, 12), new T.MeshBasicMaterial({ color: w[0], wireframe: true, transparent: true, opacity: 0.45, depthTest: false }));
+        m.position.set(hx, hy, hz); m.userData = { v: w[1], r: 0.1, k }; A.world.add(m); waves.push(m);
+      });
+    }
+    const j = si = (si + 1) % NS; sp[j * 3] = hx; sp[j * 3 + 1] = hy; sp[j * 3 + 2] = hz; sc[j * 3] = 1; sc[j * 3 + 1] = 0.2; sc[j * 3 + 2] = 0.15; sa[j] = 0;
+    if (!silent) {
+      A.mark('quake');
+      const E = Math.pow(10, 1.5 * mag + 4.8);
+      Q.last = 'Sismo M' + mag.toFixed(1) + ' — foco ' + ['raso (~10 km)', 'intermediário (~80 km)', 'profundo (~300 km)'][depthIdx] + '. Energia ≈ ' + E.toExponential(1).replace('e+', ' × 10^') + ' J' + (Q.tsu > 0.5 ? '. Deslocamento vertical do fundo → TSUNAMI!' : '.');
+      A.toast && A.toast(Q.last); A.haptic && A.haptic(0.4 + k * 0.6, 200 + k * 800);
+    }
+  };
+
+  function initMicro() {
+    const g = micro.group = A.micro = new T.Group(); g.visible = false;
+    const nx = 12, ny = 4, nz = 6, sp0 = 0.5;
+    micro.rows = ny; micro.nx = nx; micro.nz = nz;
+    const geo = new T.SphereGeometry(0.17, 10, 8), mk = c => new T.MeshLambertMaterial({ color: 0xffffff });
+    micro.top = new T.InstancedMesh(geo, mk(), nx * ny * nz); micro.bot = new T.InstancedMesh(geo, mk(), nx * ny * nz);
+    micro.top.instanceColor = new T.InstancedBufferAttribute(new Float32Array(nx * ny * nz * 3), 3);
+    micro.bot.instanceColor = new T.InstancedBufferAttribute(new Float32Array(nx * ny * nz * 3), 3);
+    g.add(micro.top, micro.bot);
+    micro.sp0 = sp0; micro.load = 0; micro.slipPos = 0; micro.slipV = 0; micro.slips = 0; micro.stretch = 0;
+    micro.sparks = pts(new Float32Array(120 * 3).fill(999), new Float32Array(120 * 3), 0.25, true);
+    micro.sv = new Float32Array(120 * 3); micro.sl = new Float32Array(120); micro.si = 0;
+    g.add(micro.sparks);
+    g.add(A.makeLabel('Placa continental (fixa)', 0, 2.2, 0, 0.9), A.makeLabel('Placa oceânica (desliza →)', 0, -2.2, 0, 0.9), A.makeLabel('Interface: atrito + rocha', 0, 0, 3.3, 0.9));
+    const light = new T.PointLight(0xffffff, 0.6, 30); light.position.set(0, 4, 5); g.add(light);
+  }
+
+  function updateMicro(dt, t) {
+    const P = A.P, m = micro, nx = m.nx, ny = m.rows, nz = m.nz, sp0 = m.sp0;
+    const Fmax = 0.25 + P.fric * 1.4;
+    m.load += dt * 0.28 * P.conv;
+    m.stretch = m.load - m.slipPos;
+    if (m.stretch > Fmax && m.slipV <= 0) { m.slipV = 1; m.slips++; A.S.microSlip = m.slips; A.mark('micro'); A.haptic && A.haptic(0.5, 250);
+      for (let i = 0; i < 40; i++) { const k = (m.si = (m.si + 1) % 120) * 3; m.sparks.geometry.attributes.position.array[k] = (Math.random() - 0.5) * 5; m.sparks.geometry.attributes.position.array[k + 1] = (Math.random() - 0.5) * 0.3; m.sparks.geometry.attributes.position.array[k + 2] = (Math.random() - 0.5) * 3; m.sv[k] = (Math.random() - 0.5) * 3; m.sv[k + 1] = Math.random() * 3; m.sv[k + 2] = (Math.random() - 0.5) * 3; m.sl[k / 3] = 1; m.sparks.geometry.attributes.color.array.set([1, 0.8, 0.3], k); } }
+    if (m.slipV > 0) { const d = m.stretch * Math.min(1, dt * 9); m.slipPos += d; if (m.stretch < 0.05) m.slipV = 0; }
+    const s = A.clamp(m.stretch / Fmax, 0, 1.2), jit = 0.015 + (P.temp - 800) / 600 * 0.05;
+    const c = new T.Color(), M = new T.Matrix4(); let n = 0;
+    for (let j = 0; j < ny; j++) for (let iz = 0; iz < nz; iz++) for (let ix = 0; ix < nx; ix++, n++) {
+      const x0 = (ix - nx / 2) * sp0, z0 = (iz - nz / 2) * sp0;
+      const wrap = v => ((v + nx * sp0 / 2) % (nx * sp0) + nx * sp0) % (nx * sp0) - nx * sp0 / 2;
+      const topX = x0 + 0.15 * m.stretch * (1 - j / (ny - 1));
+      const botX = wrap(x0 + m.slipPos + m.stretch * (j / (ny - 1)));
+      const J = () => Math.sin(n * 12.9 + t * 9) * jit;
+      M.makeTranslation(topX + J(), 0.35 + j * sp0, z0 + J()); m.top.setMatrixAt(n, M);
+      M.makeTranslation(botX + J(), -0.35 - j * sp0, z0 + J()); m.bot.setMatrixAt(n, M);
+      const hot = (j === 0 ? 1 : 0.35) * s;
+      c.setRGB(0.55 + hot * 0.45, 0.62 - hot * 0.45, 0.78 - hot * 0.65); m.top.setColorAt(n, c);
+      c.setRGB(0.25 + hot * 0.7, 0.3 - hot * 0.2, 0.42 - hot * 0.3); m.bot.setColorAt(n, c);
+    }
+    m.top.instanceMatrix.needsUpdate = m.bot.instanceMatrix.needsUpdate = true; m.top.instanceColor.needsUpdate = m.bot.instanceColor.needsUpdate = true;
+    // faíscas
+    const pp = m.sparks.geometry.attributes.position.array, cc2 = m.sparks.geometry.attributes.color.array;
+    for (let i = 0; i < 120; i++) { if (m.sl[i] <= 0) { pp[i * 3 + 1] = 999; continue; } m.sl[i] -= dt * 1.2; m.sv[i * 3 + 1] -= 6 * dt; for (let a = 0; a < 3; a++) pp[i * 3 + a] += m.sv[i * 3 + a] * dt; }
+    m.sparks.geometry.attributes.position.needsUpdate = m.sparks.geometry.attributes.color.needsUpdate = true;
+    A.S.microStress = Math.round(100 * A.clamp(m.stretch / Fmax, 0, 1));
+  }
+
+  A.flowUpdate = function (dt, t) {
+    const P = A.P, S = A.S, d = A.derive();
+    conv.visible = P.convOn; fluid.visible = true; seis.visible = true;
+    // convecção
+    const hot = A.clamp((P.temp - 800) / 600, 0, 1), amp = 1.5 * P.conv * (0.5 + hot);
+    const kx = Math.PI / 10, ky = Math.PI / 6;
+    if (P.convOn && !S.micro) for (let i = 0; i < NC; i++) {
+      const x = cp[i * 3], y = cp[i * 3 + 1], xp = x + 10, yp = y + 11;
+      const u = ky * Math.sin(kx * xp) * Math.cos(ky * yp) * amp, v = -kx * Math.cos(kx * xp) * Math.sin(ky * yp) * amp;
+      cp[i * 3] += u * dt; cp[i * 3 + 1] += v * dt;
+      if (cp[i * 3] < -10 || cp[i * 3] > 10 || cp[i * 3 + 1] < -11 || cp[i * 3 + 1] > -5) seedConv(i);
+      const f = A.clamp(v / (kx * amp + 1e-6) * 1.0, -1, 1) * 0.5 + 0.5;
+      cc[i * 3] = 0.25 + 0.75 * f; cc[i * 3 + 1] = 0.55 + 0.1 * f - 0.3 * f * f; cc[i * 3 + 2] = 1 - 0.85 * f;
+    }
+    conv.geometry.attributes.position.needsUpdate = conv.geometry.attributes.color.needsUpdate = true;
+    // fluidos da subducção (água → fusão → magma)
+    const rise = 0.35 + (1 - d.s) * 0.45;
+    for (let i = 0; i < NF; i++) {
+      fh[i] += dt * rise; const x = fp[i * 3] + (3.2 - fp[i * 3]) * dt * 0.12; fp[i * 3] = x;
+      fp[i * 3 + 1] = A.slabY(x) + 0.08 + fh[i];
+      if (fp[i * 3 + 1] > -2.0) seedFluid(i, false);
+      const m = A.clamp((fh[i] - 0.3) / 0.8, 0, 1);
+      fc[i * 3] = 0.4 + 0.6 * m; fc[i * 3 + 1] = 0.75 - 0.25 * m; fc[i * 3 + 2] = 1 - 0.9 * m;
+    }
+    fluid.geometry.attributes.position.needsUpdate = fluid.geometry.attributes.color.needsUpdate = true;
+
+    // sismicidade ambiente + acúmulo de deformação elástica
+    S.strain = Math.min(1, S.strain + dt * 0.03 * P.fric * P.conv);
+    seisT -= dt;
+    if (P.seis && seisT <= 0 && !S.micro) { seisT = 0.7 + Math.random() * 1.5; const x = -3 + Math.random() * 12, j = si = (si + 1) % NS;
+      sp[j * 3] = x; sp[j * 3 + 1] = A.slabY(x) + (Math.random() - 0.4) * 0.7; sp[j * 3 + 2] = (Math.random() - 0.5) * 7; sc[j * 3] = 1; sc[j * 3 + 1] = 0.85; sc[j * 3 + 2] = 0.3; sa[j] = 0; }
+    if (S.strain >= 1 && P.seis && S.step <= 1 && !S.micro) A.quake(5.6 + Math.random() * 1.2, (Math.random() * 3) | 0, false);
+    for (let i = 0; i < NS; i++) { if (sa[i] < 0) continue; sa[i] += dt; if (sa[i] > 25) { sa[i] = -1; sp[i * 3 + 1] = 999; } else { const f = 1 - sa[i] / 25; sc[i * 3] *= 1; seis.geometry.attributes.color.array[i * 3 + 2] = sc[i * 3 + 2] * f; } }
+    seis.geometry.attributes.position.needsUpdate = seis.geometry.attributes.color.needsUpdate = true;
+
+    // ondas sísmicas e tremor
+    for (let i = waves.length - 1; i >= 0; i--) {
+      const w = waves[i]; w.userData.r += w.userData.v * dt; w.scale.setScalar(w.userData.r); w.material.opacity = 0.45 * Math.max(0, 1 - w.userData.r / 24);
+      if (w.userData.r > 24) { A.world.remove(w); w.geometry.dispose(); w.material.dispose(); waves.splice(i, 1); }
+    }
+    Q.amp *= Math.exp(-dt * 1.6); Q.slip *= Math.exp(-dt * 0.9); Q.tsu *= Math.exp(-dt * 0.5);
+    A.world.position.set((Math.random() - 0.5) * Q.amp, (Math.random() - 0.5) * Q.amp, (Math.random() - 0.5) * Q.amp);
+    if (S.micro) updateMicro(dt, t);
+  };
+})();
+
+</script>
+<script type="text/x-app" data-name="map">
+/* Etapa 3 — Geoprocessamento de risco: mapa 20×20 km, PDC, lahares, andossolos e rotas de evacuação */
+(function () {
+  const T = THREE, A = APP, N = 1024, KM = N / 20;
+  const VAL = [0.45, 2.55, 4.4];
+  const TOWNS = [
+    { n: 'Vila Fértil', r: 3.8, a: 1.25, pop: 4200 }, { n: 'Rio Bravo', r: 5.4, a: 0.5, pop: 2600 },
+    { n: 'São Bento', r: 6.6, a: 2.6, pop: 3100 }, { n: 'Porto Seco', r: 7.6, a: 4.5, pop: 1800 }];
+  const SHEL = [{ n: 'Abrigo A', r: 8.8, a: 1.6 }, { n: 'Abrigo B', r: 8.6, a: 3.5 }, { n: 'Abrigo C', r: 8.7, a: 5.5 }];
+  const xy = o => [Math.cos(o.a) * o.r, Math.sin(o.a) * o.r];
+  TOWNS.forEach(t => { [t.x, t.z] = xy(t); }); SHEL.forEach(s => { [s.x, s.z] = xy(s); });
+  const wrap = a => { a = (a + Math.PI) % (2 * Math.PI); if (a < 0) a += 2 * Math.PI; return a - Math.PI; };
+  const vth = (i, r) => VAL[i] + 0.12 * Math.sin(r * 0.7 + i);
+  const M = A.M = { origin: 1, pts: [], mode: 'bus', alert: 90, p: 0, walker: -1, result: null, sim: false, soil: false, hz: {}, clock: 0, report: [] };
+  A.TOWNS = TOWNS; A.SHEL = SHEL;
+
+  function height(x, z) {
+    const r = Math.hypot(x, z), th = Math.atan2(z, x);
+    let cut = 0; for (let i = 0; i < 3; i++) { const d = r * Math.abs(wrap(th - vth(i, r))); cut = Math.max(cut, Math.exp(-(d / 0.5) * (d / 0.5))); }
+    return (2.2 * Math.pow(Math.max(0, 1 - r / 8.5), 1.5) + 0.12 * Math.sin(x * 1.3) * Math.cos(z * 1.1)) - cut * 0.3 * Math.min(1, r / 2);
+  }
+  function hazard() {
+    const d = A.derive(), v = d.style.startsWith('efusiva') ? 1 : d.vei;
+    const Rp = v <= 2 ? 0.7 : 1.6 + 0.65 * (v - 1);
+    const Lr = Math.min(14, (2.5 + v) * (A.P.rain ? 1.5 : 1));
+    return { v, Rp, Lr, w0: 0.35 + (A.P.rain ? 0.25 : 0), vei: d.vei, style: d.style };
+  }
+  const Rpdc = (th, h) => { let f = 0; VAL.forEach(a => { const d = wrap(th - a); f = Math.max(f, Math.exp(-(d / 0.3) * (d / 0.3))); }); return h.Rp * (0.5 + 0.75 * f); };
+  function inPDC(x, z, h) { return Math.hypot(x, z) < Rpdc(Math.atan2(z, x), h); }
+  function inLahar(x, z, h) {
+    const r = Math.hypot(x, z), th = Math.atan2(z, x); if (r < 0.5 || r > h.Lr) return 0;
+    for (let i = 0; i < 3; i++) if (r * Math.abs(wrap(th - vth(i, r))) < h.w0 + 0.03 * r) return r; return 0;
+  }
+
+  A.initMap = function () {
+    const g = A.mapG = new T.Group(); g.visible = false;
+    const geo = new T.PlaneGeometry(20, 20, 100, 100); geo.rotateX(-Math.PI / 2);
+    const pa = geo.attributes.position; for (let i = 0; i < pa.count; i++) pa.setY(i, height(pa.getX(i), pa.getZ(i)) * 0.55);
+    geo.computeVertexNormals();
+    M.cv = document.createElement('canvas'); M.cv.width = M.cv.height = N; M.ctx = M.cv.getContext('2d'); M.tex = new T.CanvasTexture(M.cv); M.tex.anisotropy = 4;
+    A.mapMesh = new T.Mesh(geo, new T.MeshLambertMaterial({ map: M.tex })); g.add(A.mapMesh);
+    const base = document.createElement('canvas'); base.width = base.height = 256; const b = base.getContext('2d'), im = b.createImageData(256, 256);
+    for (let py = 0; py < 256; py++) for (let px = 0; px < 256; px++) {
+      const x = px / 12.8 - 10, z = py / 12.8 - 10, h = height(x, z), sh = height(x - 0.3, z - 0.3) - h, k = A.clamp(0.6 + sh * 2.2, 0.3, 1.2), i = (py * 256 + px) * 4;
+      const t = A.clamp(h / 2.2, 0, 1); im.data[i] = (70 + 110 * t) * k; im.data[i + 1] = (130 + 40 * t - 30 * t * t) * k; im.data[i + 2] = (70 + 70 * t) * k; im.data[i + 3] = 255;
+    }
+    b.putImageData(im, 0, 0); M.base = base;
+    const mk = (c) => new T.Mesh(new T.CylinderGeometry(0.09, 0.09, 0.35, 8), new T.MeshBasicMaterial({ color: c }));
+    M.walkerMesh = new T.Mesh(new T.SphereGeometry(0.18, 12, 10), new T.MeshBasicMaterial({ color: 0xffe14a })); M.walkerMesh.visible = false; g.add(M.walkerMesh);
+    M.mapMask = [1];
+    A.mapDirty = true;
+  };
+
+  const P2 = (x, z) => [(x + 10) * KM, (z + 10) * KM];
+  function draw() {
+    const c = M.ctx, h = hazard(); M.hz = h; c.clearRect(0, 0, N, N); c.imageSmoothingEnabled = true; c.drawImage(M.base, 0, 0, N, N);
+    c.lineJoin = 'round'; c.lineCap = 'round';
+    if (M.soil || A.P.soil) { c.fillStyle = 'rgba(70,40,20,.5)'; c.beginPath(); const o = P2(0, 0); c.arc(o[0], o[1], 6.4 * KM, 0, 7); c.arc(o[0], o[1], 1.4 * KM, 0, 7, true); c.fill('evenodd'); c.fillStyle = '#fff'; c.font = 'bold 26px system-ui'; c.fillText('Andossolos (solo vulcânico fértil)', P2(-4.8, -5.6)[0], P2(0, -5.6)[1]); }
+    const p = M.p;
+    if (p > 0) {
+      const wd = h.Lr * p; // lahares
+      c.strokeStyle = 'rgba(120,80,40,.8)'; c.fillStyle = c.strokeStyle;
+      for (let i = 0; i < 3; i++) { c.beginPath(); for (let r = 0.6; r <= wd; r += 0.2) { const q = P2(Math.cos(vth(i, r)) * r, Math.sin(vth(i, r)) * r); r < 0.7 ? c.moveTo(q[0], q[1]) : c.lineTo(q[0], q[1]); } c.lineWidth = 2 * (h.w0 + 0.03 * wd * 0.5) * KM; c.stroke(); }
+      c.fillStyle = 'rgba(214,40,40,.55)'; c.strokeStyle = '#ff6b6b'; c.lineWidth = 3; c.beginPath();
+      for (let k = 0; k <= 180; k++) { const th = k / 180 * 6.2832, R = Rpdc(th, h) * Math.min(1, p * 1.6), q = P2(Math.cos(th) * R, Math.sin(th) * R); k ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1]); }
+      c.fill(); c.stroke();
+      c.fillStyle = 'rgba(255,220,80,.22)'; c.beginPath(); // queda de cinzas a sotavento (vento p/ leste)
+      for (let k = 0; k <= 40; k++) { const th = k / 40 * 6.2832, q = P2(2 + (2 + h.v) * p * (1 + Math.cos(th)) + 0 * th, Math.sin(th) * (1.1 + 0.4 * h.v) * p * 0.9); k ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1]); } c.fill();
+    }
+    // grade, norte e escala
+    c.strokeStyle = 'rgba(255,255,255,.18)'; c.lineWidth = 1; for (let k = -10; k <= 10; k += 2) { c.beginPath(); c.moveTo(P2(k, -10)[0], 0); c.lineTo(P2(k, 10)[0], N); c.moveTo(0, P2(0, k)[1]); c.lineTo(N, P2(0, k)[1]); c.stroke(); }
+    // vulcão
+    const v0 = P2(0, 0); c.fillStyle = '#ff7a1a'; c.beginPath(); c.moveTo(v0[0], v0[1] - 24); c.lineTo(v0[0] + 22, v0[1] + 16); c.lineTo(v0[0] - 22, v0[1] + 16); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 3; c.stroke();
+    // abrigos e vilas
+    c.font = 'bold 26px system-ui'; c.textAlign = 'center';
+    SHEL.forEach(s => { const q = P2(s.x, s.z); c.fillStyle = '#18a558'; c.fillRect(q[0] - 18, q[1] - 18, 36, 36); c.fillStyle = '#fff'; c.fillText('+', q[0], q[1] + 9); c.strokeStyle = 'rgba(24,165,88,.7)'; c.lineWidth = 3; c.beginPath(); c.arc(q[0], q[1], 0.8 * KM, 0, 7); c.stroke(); c.fillText(s.n, q[0], q[1] + 50); });
+    TOWNS.forEach((t, i) => { const q = P2(t.x, t.z); c.fillStyle = i === M.origin ? '#ffe14a' : '#fff'; c.strokeStyle = '#111'; c.lineWidth = 4; c.beginPath(); c.arc(q[0], q[1], i === M.origin ? 17 : 12, 0, 7); c.fill(); c.stroke(); c.fillStyle = '#fff'; c.strokeStyle = '#000'; c.lineWidth = 5; c.strokeText(t.n + ' (' + t.pop + ' hab.)', q[0], q[1] - 26); c.fillText(t.n + ' (' + t.pop + ' hab.)', q[0], q[1] - 26); });
+    // rota
+    const rt = route();
+    if (rt.length > 1) { c.strokeStyle = '#ffe14a'; c.lineWidth = 8; c.setLineDash([22, 12]); c.beginPath(); rt.forEach((q, i) => { const w = P2(q[0], q[1]); i ? c.lineTo(w[0], w[1]) : c.moveTo(w[0], w[1]); }); c.stroke(); c.setLineDash([]); }
+    M.pts.forEach(q => { const w = P2(q[0], q[1]); c.fillStyle = '#ffe14a'; c.strokeStyle = '#000'; c.lineWidth = 3; c.beginPath(); c.arc(w[0], w[1], 9, 0, 7); c.fill(); c.stroke(); });
+    c.fillStyle = '#fff'; c.font = 'bold 30px system-ui'; c.textAlign = 'left'; c.fillText('N ↑', 20, 44); c.fillRect(20, N - 50, 2 * KM, 6); c.fillText('2 km', 20, N - 58);
+    M.tex.needsUpdate = true;
+  }
+  const route = () => { const t = TOWNS[M.origin]; return [[t.x, t.z]].concat(M.pts); };
+  function samples() {
+    const rt = route(), out = []; let s = 0;
+    for (let i = 1; i < rt.length; i++) { const dx = rt[i][0] - rt[i - 1][0], dz = rt[i][1] - rt[i - 1][1], L = Math.hypot(dx, dz), n = Math.max(1, Math.ceil(L / 0.15)); for (let k = 0; k < n; k++) out.push([rt[i - 1][0] + dx * k / n, rt[i - 1][1] + dz * k / n, s + L * k / n]); s += L; }
+    const e = rt[rt.length - 1]; out.push([e[0], e[1], s]); return { out, len: s, end: e };
+  }
+  const SPD = { foot: 4 / 60, bus: 25 / 60 };
+  A.mapEval = function () {
+    const h = hazard(), sm = samples(), spd = SPD[M.mode], rep = [], res = { ok: false, score: 0 };
+    if (M.pts.length < 1) { M.report = ['Clique no mapa para criar pontos da rota. A rota começa na vila de origem.']; return M.report; }
+    let pdcKm = 0, lahKm = 0;
+    sm.out.forEach(q => {
+      const t = q[2] / spd, tau = t - M.alert; // minutos após a erupção
+      if (tau >= 0 && inPDC(q[0], q[1], h)) pdcKm += 0.15;
+      const lr = inLahar(q[0], q[1], h); if (lr && tau >= lr / 0.33) lahKm += 0.15;
+    });
+    const sh = SHEL.find(s => Math.hypot(sm.end[0] - s.x, sm.end[1] - s.z) < 0.8), tmin = sm.len / spd;
+    rep.push('Distância: ' + sm.len.toFixed(1) + ' km · tempo ' + Math.round(tmin) + ' min (alerta: ' + M.alert + ' min antes da erupção).');
+    rep.push(sh ? 'Chegada: ' + sh.n + ' ✔' : 'A rota ainda não termina em um abrigo ✖ (termine dentro do círculo verde).');
+    rep.push(pdcKm > 0.1 ? 'Exposição a corrente piroclástica: ' + pdcKm.toFixed(1) + ' km ✖' : 'Sem exposição a corrente piroclástica ✔');
+    rep.push(lahKm > 0.1 ? 'Exposição a lahar: ' + lahKm.toFixed(1) + ' km ✖ (evite os vales)' : 'Sem exposição a lahar ✔');
+    res.ok = !!sh && pdcKm <= 0.1 && lahKm <= 0.1;
+    res.score = (sh ? 40 : 0) + (pdcKm <= 0.1 ? 30 : 0) + (lahKm <= 0.1 ? 30 : 0);
+    rep.push(res.ok ? 'Evacuação bem-sucedida! Pontuação ' + res.score + '/100.' : 'Pontuação ' + res.score + '/100. Ajuste a rota, o meio de transporte ou use zonas de perigo da simulação.');
+    if (sh) A.mark('route'); if (res.ok && M.sim) A.mark('safe');
+    M.result = res; M.report = rep; return rep;
+  };
+  A.map = {
+    click(x, z) {
+      if (Math.abs(x) > 10 || Math.abs(z) > 10) return;
+      const s = SHEL.find(s => Math.hypot(x - s.x, z - s.z) < 0.8); M.pts.push(s ? [s.x, s.z] : [x, z]); M.walker = -1; A.mapEval(); A.mapDirty = A.dirty = true;
+    },
+    undo() { M.pts.pop(); M.walker = -1; A.mapEval(); A.mapDirty = A.dirty = true; },
+    clear() { M.pts = []; M.walker = -1; M.report = []; M.result = null; A.mapDirty = A.dirty = true; },
+    origin(i) { M.origin = i; A.map.clear(); },
+    simulate() { M.p = 0.001; M.sim = true; A.mark('sim'); },
+    evacuate() { if (M.pts.length) { M.walker = 0; M.clock = 0; A.mapEval(); } },
+    toggleSoil() { M.soil = !M.soil; A.mapDirty = A.dirty = true; }
+  };
+  A.mapUpdate = function (dt) {
+    if (M.p > 0 && M.p < 1) { M.p = Math.min(1, M.p + dt / 7); A.mapDirty = true; }
+    if (M.walker >= 0) {
+      const sm = samples(), spd = SPD[M.mode]; M.clock += dt * 25; // 1 s real = 25 min
+      const d = Math.min(sm.len, M.clock * spd); let i = 0; while (i < sm.out.length - 1 && sm.out[i][2] < d) i++;
+      const q = sm.out[i]; M.walkerMesh.visible = true; M.walkerMesh.position.set(q[0], height(q[0], q[1]) * 0.55 + 0.25, q[1]);
+      if (M.clock > M.alert && M.p === 0) { M.p = 0.001; M.sim = true; }
+      if (d >= sm.len && M.clock > M.alert + 30) M.walker = -2;
+    } else if (M.walker === -1) M.walkerMesh.visible = false;
+    if (A.mapDirty) { draw(); A.mapDirty = false; }
+  };
+  A.mapHazard = hazard;
+})();
+
+</script>
+<script type="text/x-app" data-name="items">
+/* Descrição declarativa dos controles de cada etapa — usada tanto pelo painel HTML quanto pelo painel VR */
+(function () {
+  const A = APP, P = A.P, S = A.S;
+  const PRESETS = { mafic: [48, 1200, 0.5, 0.5], inter: [58, 1100, 3, 1.2], felsic: [70, 900, 5.5, 2] };
+  A.preset = k => { const p = PRESETS[k]; P.silica = p[0]; P.temp = p[1]; P.water = p[2]; P.press = p[3]; A.dirty = A.mapDirty = true; };
+  A.setStep = n => {
+    S.step = n; if (n !== 1) { S.dive = false; S.micro = false; } A.dirty = true; A.applyView && A.applyView();
+    if (n === 3) A.mapDirty = true;
+  };
+  A.toast = (text, ms) => { S.toast = { text, until: performance.now() + (ms || 7000) }; A.dirty = true; };
+
+  const sl = (k, l, min, max, step, u, f) => ({ t: 'slider', k, l, min, max, step, u: u || '', f });
+  const tg = (k, l) => ({ t: 'toggle', k, l });
+  const bt = (l, fn, kind) => ({ t: 'btn', l, fn, kind });
+  const nextBtn = n => bt(n < 4 ? 'Avançar → ' + A.steps[n + 1].title + ': ' + A.steps[n + 1].sub : 'Reiniciar trilha', () => { if (n < 4) A.setStep(n + 1); else { A.tasks = {}; S.ans = {}; try { localStorage.removeItem('litos_tasks'); } catch (e) {} A.setStep(0); } }, 'next');
+  const ro = fn => ({ t: 'ro', fn });
+  const tasks = n => ({ t: 'tasks', list: A.tasksByStep[n] });
+
+  A.items = function () {
+    const n = S.step, d = new Proxy({}, { get: (_, k) => A.derive()[k] }), it = [{ t: 'p', l: A.steps[n].text }];
+    if (n === 0) {
+      it.push({ t: 'h', l: 'Camadas e rótulos' }, tg('labels', 'Rótulos'), tg('faults', 'Falhas geológicas'), tg('convOn', 'Correntes de convecção'), tg('water3d', 'Oceano'), tg('xray', 'Raios-X da crosta (ver câmara magmática)'));
+      it.push({ t: 'h', l: 'Como navegar' }, { t: 'p', l: 'Computador: arraste = girar, roda = zoom, botão direito = mover. Tablet: um dedo gira, dois dedos aproximam. Óculos VR: botão "Entrar em VR"; gatilho aponta e clica nos painéis, direcional/analógico gira e movimenta, botão "Maquete ⇄ Imersão" muda a escala.' });
+    }
+    if (n === 1) {
+      it.push(tasks(1), { t: 'h', l: 'Explorar' },
+        bt(() => S.dive ? '⬆ Voltar à superfície' : '⬇ Mergulhar no manto', () => { S.dive = !S.dive; S.micro = false; if (S.dive) A.mark('dive'); A.applyView(); A.dirty = true; }),
+        bt(() => S.micro ? '⬅ Sair do microscópio' : '🔬 Microscópio: atrito na falha', () => { S.micro = !S.micro; S.dive = false; A.applyView(); A.dirty = true; }),
+        { t: 'h', l: 'Parâmetros' },
+        sl('temp', 'Temperatura do manto', 800, 1400, 10, ' °C'), sl('conv', 'Velocidade de convecção', 0.2, 3, 0.1, '×'), sl('fric', 'Atrito / acoplamento das placas', 0.1, 1, 0.05, ''),
+        { t: 'h', l: 'Eventos sísmicos' },
+        { t: 'seg', k: 'depth', l: 'Profundidade do foco', o: ['Rasa', 'Intermediária', 'Profunda'] },
+        sl('mag', 'Magnitude', 3, 9, 0.1, ' Mw'), bt('💥 Ativar sismo', () => A.quake(P.mag, P.depth)), tg('seis', 'Sismicidade ambiente (zona de Benioff)'),
+        ro(() => 'Deformação elástica acumulada: ' + Math.round(S.strain * 100) + '%' + (S.micro ? ' · Tensão na falha: ' + (S.microStress || 0) + '%' : '')),
+        ro(() => A.Q.last || 'Dica: a sismicidade se alinha ao plano de Benioff — o contorno da placa que mergulha.'), nextBtn(1));
+    }
+    if (n === 2) {
+      it.push(tasks(2), { t: 'h', l: 'Composição do magma' },
+        { t: 'segf', l: 'Preset', o: [['Máfico', () => A.preset('mafic')], ['Intermediário', () => A.preset('inter')], ['Félsico', () => A.preset('felsic')]] },
+        sl('silica', 'Sílica (SiO₂)', 45, 75, 1, ' %'), sl('temp', 'Temperatura do magma', 800, 1300, 10, ' °C'), sl('water', 'Gases dissolvidos (H₂O)', 0, 7, 0.1, ' %'), sl('press', 'Pressão na câmara', 0.1, 3, 0.1, ' kbar'),
+        tg('rain', 'Chuva intensa / neve derretida (lahar)'), tg('auto', 'Erupção automática ao atingir a pressão crítica'),
+        bt('🌋 Provocar erupção', () => A.erupt(), 'hot'),
+        { t: 'bar', l: 'Sobrepressão da câmara', fn: () => S.overp },
+        ro(() => d.name + ' · η ≈ 10^' + d.le.toFixed(1) + ' Pa·s'), ro(() => 'Cone: ' + d.cone), ro(() => 'Erupção ' + d.style + ' · VEI ' + d.vei), nextBtn(2));
+    }
+    if (n === 3) {
+      const h = new Proxy({}, { get: (_, k) => A.mapHazard()[k] });
+      it.push(tasks(3), { t: 'h', l: 'Cenário' },
+        { t: 'segf', l: 'Magma', o: [['Efusivo', () => A.preset('mafic')], ['Moderado', () => A.preset('inter')], ['Explosivo', () => A.preset('felsic')]] },
+        tg('rain', 'Chuva intensa (lahares maiores)'), bt('⚠ Simular PDC e lahares', () => A.map.simulate(), 'hot'), bt(() => A.M.soil ? 'Ocultar andossolos' : 'Mostrar andossolos (solos férteis)', () => A.map.toggleSoil()),
+        ro(() => 'VEI ' + h.vei + ' · alcance PDC ≈ ' + h.Rp.toFixed(1) + '–' + (h.Rp * 1.25).toFixed(1) + ' km · lahar até ' + h.Lr.toFixed(1) + ' km'),
+        { t: 'h', l: 'Plano de evacuação' },
+        { t: 'segf', l: 'Origem', sel: () => A.M.origin, o: A.TOWNS.map((t, i) => [t.n, () => A.map.origin(i)]) },
+        { t: 'segf', l: 'Transporte', sel: () => A.M.mode === 'foot' ? 0 : 1, o: [['A pé (4 km/h)', () => { A.M.mode = 'foot'; A.map.clear(); }], ['Ônibus (25 km/h)', () => { A.M.mode = 'bus'; A.map.clear(); }]] },
+        { t: 'slider', k: 'alert', l: 'Tempo de alerta antes da erupção', min: 20, max: 180, step: 5, u: ' min', obj: A.M },
+        { t: 'p', l: 'Clique no mapa para adicionar pontos até um abrigo (círculo verde). PDC atinge instantaneamente a zona vermelha; lahares percorrem os vales marrons depois.' },
+        bt('↶ Desfazer ponto', () => A.map.undo()), bt('✖ Limpar rota', () => A.map.clear()), bt('▶ Evacuar (animar)', () => A.map.evacuate(), 'hot'),
+        ro(() => (A.M.report || []).join('\n')), nextBtn(3));
+    }
+    if (n === 4) {
+      A.quiz.forEach((q, qi) => {
+        it.push({ t: 'h', l: 'Questão ' + (qi + 1) }, { t: 'p', l: q.q });
+        q.o.forEach((o, oi) => it.push({ t: 'choice', l: 'ABCD'[oi] + ') ' + o, st: S.ans[qi] === undefined ? '' : (oi === q.c ? 'ok' : (S.ans[qi] === oi ? 'bad' : '')), fn: () => { if (S.ans[qi] === undefined) { S.ans[qi] = oi; A.dirty = true; } } }));
+        if (S.ans[qi] !== undefined) it.push({ t: 'p', cls: S.ans[qi] === q.c ? 'ok' : 'bad', l: (S.ans[qi] === q.c ? '✔ Correto! ' : '✖ Resposta correta: ' + 'ABCD'[q.c] + '. ') + 'Gabarito comentado: ' + q.fb });
+      });
+      if (Object.keys(S.ans).length === A.quiz.length) {
+        const ok = A.quiz.filter((q, i) => S.ans[i] === q.c).length, done = Object.keys(A.tasks).length;
+        it.push({ t: 'h', l: 'Resultado' }, { t: 'p', l: 'Você acertou ' + ok + ' de ' + A.quiz.length + ' questões e concluiu ' + done + ' missões da trilha.' });
+      }
+      it.push(nextBtn(4));
+    }
+    return it;
+  };
+})();
+
+</script>
+<script type="text/x-app" data-name="ui">
+/* Painel HTML (computador / tablet) gerado a partir de APP.items() */
+(function () {
+  const A = APP, S = A.S, P = A.P;
+  let body, tabs, toast, sig = '', nodes = [];
+  const $ = (t, c, h) => { const e = document.createElement(t); if (c) e.className = c; if (h !== undefined) e.textContent = h; return e; };
+  const val = it => (it.obj || P)[it.k];
+  const fmt = (it, v) => (it.f ? it.f(v) : (Math.abs(it.step) < 1 ? v.toFixed(it.step < 0.1 ? 2 : 1) : Math.round(v))) + (it.u || '');
+  A.setVal = function (it, v) {
+    const o = it.obj || P; v = A.clamp(Math.round(v / it.step) * it.step, it.min, it.max); o[it.k] = +v.toFixed(3);
+    A.dirty = true; if (it.k === 'temp' && S.step === 1) A.mark('conv'); if (it.obj === A.M || ['silica', 'temp', 'water', 'press', 'rain'].includes(it.k)) A.mapDirty = true;
+  };
+  A.setToggle = function (k) { P[k] = !P[k]; if (k === 'xray') A.setXray(P.xray); A.dirty = true; if (k === 'rain') A.mapDirty = true; };
+
+  function build() {
+    body.innerHTML = ''; nodes = [];
+    A.items().forEach(it => {
+      let e, r = () => {};
+      if (it.t === 'h') e = $('h3', '', it.l);
+      else if (it.t === 'p') e = $('p', it.cls || '', it.l);
+      else if (it.t === 'slider') {
+        e = $('div', 'row'); const lab = $('label'), b = $('b'); lab.append(it.l + ': ', b);
+        const inp = $('input'); inp.type = 'range'; inp.min = it.min; inp.max = it.max; inp.step = it.step;
+        inp.oninput = () => { A.setVal(it, +inp.value); r(); }; e.append(lab, inp);
+        r = () => { const v = val(it); b.textContent = fmt(it, v); if (document.activeElement !== inp) inp.value = v; };
+      } else if (it.t === 'toggle') {
+        e = $('label', 'tog'); const c = $('input'); c.type = 'checkbox'; c.onchange = () => { A.setToggle(it.k); }; e.append(c, ' ' + it.l); r = () => { c.checked = !!P[it.k]; };
+      } else if (it.t === 'btn') {
+        e = $('button', 'btn ' + (it.kind || '')); e.onclick = it.fn; r = () => { const l = typeof it.l === 'function' ? it.l() : it.l; if (e.textContent !== l) e.textContent = l; };
+      } else if (it.t === 'seg' || it.t === 'segf') {
+        e = $('div', 'row'); e.append($('label', '', it.l)); const g = $('div', 'seg'), bs = [];
+        it.o.forEach((o, i) => { const b = $('button', '', it.t === 'seg' ? o : o[0]); b.onclick = () => { if (it.t === 'seg') { P[it.k] = i; A.dirty = true; } else o[1](); A.dirty = true; }; bs.push(b); g.append(b); });
+        e.append(g); r = () => { const cur = it.t === 'seg' ? P[it.k] : (it.sel ? it.sel() : -1); bs.forEach((b, i) => b.classList.toggle('on', i === cur)); };
+      } else if (it.t === 'bar') {
+        e = $('div', 'row'); const lab = $('label', '', it.l), bar = $('div', 'bar'), f = $('i'); bar.append(f); e.append(lab, bar); r = () => { const v = it.fn(); f.style.width = (v * 100) + '%'; f.style.background = v > 0.8 ? '#ff4a3a' : '#ffa020'; };
+      } else if (it.t === 'tasks') {
+        e = $('ul', 'tasks'); const li = it.list.map(t => { const l = $('li'); e.append(l); return l; });
+        r = () => it.list.forEach((t, i) => { li[i].textContent = (A.tasks[t[0]] ? '✅ ' : '⬜ ') + t[1]; li[i].className = A.tasks[t[0]] ? 'done' : ''; });
+      } else if (it.t === 'ro') { e = $('div', 'ro'); r = () => { const s = it.fn(); if (e.textContent !== s) e.textContent = s; }; }
+      else if (it.t === 'choice') { e = $('button', 'choice ' + it.st, it.l); e.onclick = it.fn; }
+      if (e) { body.append(e); r(); nodes.push(r); }
+    });
+  }
+
+  A.initUI = function () {
+    body = document.getElementById('body'); tabs = document.getElementById('tabs'); toast = document.getElementById('toast');
+    A.steps.forEach((s, i) => { const b = $('button', 'tab'); b.innerHTML = '<span>' + s.title + '</span><small>' + s.sub + '</small>'; b.onclick = () => A.setStep(i); tabs.append(b); });
+    document.getElementById('toggle').onclick = () => document.getElementById('panel').classList.toggle('closed');
+    const hv = document.getElementById('btnView'); hv && (hv.onclick = () => { A.resetCam && A.resetCam(); });
+  };
+  let acc = 0;
+  A.uiUpdate = function (dt) {
+    acc += dt;
+    const s2 = S.step + '|' + JSON.stringify(S.ans) + '|' + (S.dive ? 1 : 0) + (S.micro ? 1 : 0);
+    if (s2 !== sig) { sig = s2; build(); [...tabs.children].forEach((t, i) => t.classList.toggle('on', i === S.step)); document.getElementById('body').scrollTop = 0; }
+    if (acc > 0.2) { acc = 0; nodes.forEach(f => f()); }
+    const t = S.toast; if (t) { const on = performance.now() < t.until; toast.textContent = on ? t.text : ''; toast.classList.toggle('show', on); }
+  };
+})();
+
+</script>
+<script type="text/x-app" data-name="vrpanel">
+/* Painel flutuante para VR: desenha APP.items() em um canvas e trata cliques por raio do controle */
+(function () {
+  const T = THREE, A = APP, S = A.S, P = A.P;
+  const W = 1024, H = 1400, HEAD = 170, FOOT = 120, PAD = 36;
+  const V = A.vrp = { regions: [], scroll: 0, max: 0, hover: null, drag: null, dirty: true, t: 0 };
+
+  A.initVRPanel = function () {
+    V.cv = document.createElement('canvas'); V.cv.width = W; V.cv.height = H; V.g = V.cv.getContext('2d');
+    V.tex = new T.CanvasTexture(V.cv); V.tex.anisotropy = 4;
+    V.mesh = new T.Mesh(new T.PlaneGeometry(0.9, 0.9 * H / W), new T.MeshBasicMaterial({ map: V.tex, transparent: true }));
+    V.mesh.visible = false; V.mesh.name = 'vrpanel'; V.mesh.renderOrder = 30;
+  };
+
+  function wrap(g, text, w) {
+    const out = [];
+    String(text).split('\n').forEach(par => {
+      let line = '';
+      par.split(' ').forEach(wd => { const t = line ? line + ' ' + wd : wd; if (g.measureText(t).width > w && line) { out.push(line); line = wd; } else line = t; });
+      out.push(line);
+    });
+    return out;
+  }
+  function rr(g, x, y, w, h, r, fill, stroke) {
+    g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+    if (fill) { g.fillStyle = fill; g.fill(); } if (stroke) { g.strokeStyle = stroke; g.lineWidth = 3; g.stroke(); }
+  }
+  const val = it => (it.obj || P)[it.k];
+
+  function reg(x, y, w, h, fn, kind) { V.regions.push({ x, y, w, h, fn, kind }); }
+  function isHover(x, y, w, h) { const p = V.hover; return p && p.x >= x && p.x <= x + w && p.y >= y && p.y <= y + h; }
+
+  function button(g, x, y, w, h, label, fn, on, color) {
+    const hv = isHover(x, y, w, h);
+    rr(g, x, y, w, h, 16, on ? '#ff8a24' : (color || (hv ? '#3b5a8f' : '#27344f')), hv ? '#fff' : 'rgba(255,255,255,.2)');
+    g.fillStyle = '#fff'; g.font = 'bold 28px system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(label, x + w / 2, y + h / 2 + 1, w - 16);
+    fn && reg(x, y, w, h, fn);
+  }
+
+  function drawItems(g, items, y0) {
+    let y = y0; const x0 = PAD, w = W - 2 * PAD - 70;
+    g.textBaseline = 'top'; g.textAlign = 'left';
+    items.forEach(it => {
+      if (it.t === 'h') { g.font = 'bold 34px system-ui'; g.fillStyle = '#ffb454'; g.fillText(it.l, x0, y + 8); y += 58; }
+      else if (it.t === 'p' || it.t === 'ro') {
+        g.font = '27px system-ui'; g.fillStyle = it.cls === 'ok' ? '#7be495' : (it.cls === 'bad' ? '#ff8a80' : (it.t === 'ro' ? '#cfe3ff' : '#e8eefc'));
+        const txt = it.t === 'ro' ? it.fn() : it.l, ls = wrap(g, txt, w); ls.forEach((l, i) => g.fillText(l, x0, y + i * 37)); y += ls.length * 37 + 16;
+      } else if (it.t === 'slider') {
+        const v = val(it), step = Math.max(1, Math.round((it.max - it.min) / it.step / 20)) * it.step;
+        g.font = '27px system-ui'; g.fillStyle = '#e8eefc'; g.textAlign = 'left'; g.fillText(it.l, x0, y);
+        g.textAlign = 'right'; g.font = 'bold 28px system-ui'; g.fillStyle = '#ffd37a'; g.fillText((it.f ? it.f(v) : (it.step < 1 ? v.toFixed(1) : Math.round(v))) + (it.u || ''), x0 + w, y); g.textAlign = 'left';
+        const ty = y + 46, tx = x0 + 80, tw = w - 160;
+        button(g, x0, ty - 8, 64, 56, '−', () => { A.setVal(it, v - step); V.dirty = true; });
+        button(g, x0 + w - 64, ty - 8, 64, 56, '+', () => { A.setVal(it, v + step); V.dirty = true; });
+        rr(g, tx, ty + 12, tw, 14, 7, '#3a4766'); const f = (v - it.min) / (it.max - it.min);
+        rr(g, tx, ty + 12, Math.max(14, tw * f), 14, 7, '#ff8a24'); g.beginPath(); g.arc(tx + tw * f, ty + 19, 17, 0, 7); g.fillStyle = '#fff'; g.fill();
+        reg(tx - 10, ty - 8, tw + 20, 56, fr => { A.setVal(it, it.min + (it.max - it.min) * fr); V.dirty = true; }, 'slider'); V.regions[V.regions.length - 1].fr = [tx - 10, tw + 20];
+        y += 112;
+      } else if (it.t === 'toggle') {
+        const on = P[it.k]; rr(g, x0, y, 56, 56, 12, on ? '#ff8a24' : '#27344f', '#fff');
+        if (on) { g.fillStyle = '#fff'; g.font = 'bold 38px system-ui'; g.textAlign = 'center'; g.fillText('✓', x0 + 28, y + 8); g.textAlign = 'left'; }
+        g.font = '27px system-ui'; g.fillStyle = '#e8eefc'; wrap(g, it.l, w - 80).forEach((l, i) => g.fillText(l, x0 + 76, y + 10 + i * 34)); reg(x0, y - 4, w, 64, () => { A.setToggle(it.k); V.dirty = true; }); y += 72;
+      } else if (it.t === 'btn') {
+        button(g, x0, y, w, 76, typeof it.l === 'function' ? it.l() : it.l, it.fn, false, it.kind === 'hot' ? '#b4381a' : (it.kind === 'next' ? '#1b6b47' : null)); y += 90;
+      } else if (it.t === 'seg' || it.t === 'segf') {
+        g.font = '26px system-ui'; g.fillStyle = '#c8d4ee'; g.fillText(it.l, x0, y); y += 36;
+        const cur = it.t === 'seg' ? P[it.k] : (it.sel ? it.sel() : -1), n = it.o.length, bw = w / n;
+        it.o.forEach((o, i) => button(g, x0 + i * bw + 3, y, bw - 6, 66, it.t === 'seg' ? o : o[0], () => { if (it.t === 'seg') P[it.k] = i; else o[1](); A.dirty = V.dirty = true; }, i === cur));
+        y += 84;
+      } else if (it.t === 'bar') {
+        const v = it.fn(); g.font = '26px system-ui'; g.fillStyle = '#c8d4ee'; g.fillText(it.l + ' ' + Math.round(v * 100) + '%', x0, y); rr(g, x0, y + 38, w, 22, 11, '#3a4766'); rr(g, x0, y + 38, Math.max(22, w * v), 22, 11, v > 0.8 ? '#ff4a3a' : '#ffa020'); y += 80;
+      } else if (it.t === 'tasks') {
+        g.font = '27px system-ui'; it.list.forEach(t => { g.fillStyle = A.tasks[t[0]] ? '#7be495' : '#e8eefc'; g.fillText((A.tasks[t[0]] ? '✅ ' : '⬜ ') + t[1], x0, y); y += 40; }); y += 12;
+      } else if (it.t === 'choice') {
+        g.font = '27px system-ui'; const ls = wrap(g, it.l, w - 40), h = ls.length * 36 + 28;
+        rr(g, x0, y, w, h, 16, it.st === 'ok' ? '#1d6b43' : (it.st === 'bad' ? '#7a2a2a' : (isHover(x0, y, w, h) ? '#3b5a8f' : '#27344f')), 'rgba(255,255,255,.25)');
+        g.fillStyle = '#fff'; ls.forEach((l, i) => g.fillText(l, x0 + 20, y + 14 + i * 36)); reg(x0, y, w, h, () => { it.fn(); V.dirty = true; }); y += h + 14;
+      }
+    });
+    return y;
+  }
+
+  A.drawVRPanel = function () {
+    const g = V.g; V.regions = [];
+    const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#101a30'); bg.addColorStop(1, '#0a1020');
+    rr(g, 0, 0, W, H, 40, bg, 'rgba(255,255,255,.35)');
+    // cabeçalho com abas
+    g.textBaseline = 'top'; g.textAlign = 'left'; g.font = 'bold 38px system-ui'; g.fillStyle = '#fff'; g.fillText('🌋 ' + A.steps[S.step].title + ' — ' + A.steps[S.step].sub, PAD, 26);
+    const tw = (W - 2 * PAD) / A.steps.length;
+    A.steps.forEach((s, i) => button(g, PAD + i * tw + 2, 88, tw - 4, 62, i === 0 ? 'Início' : (i === 4 ? 'Quiz' : 'Etapa ' + i), () => { A.setStep(i); V.scroll = 0; V.dirty = true; }, i === S.step));
+    // corpo com rolagem
+    g.save(); g.beginPath(); g.rect(0, HEAD, W, H - HEAD - FOOT); g.clip();
+    const regStart = V.regions.length, end = drawItems(g, A.items(), HEAD + 10 - V.scroll);
+    V.max = Math.max(0, end + V.scroll - (H - FOOT) + 20); g.restore();
+    V.regions = V.regions.filter((r, i) => i < regStart || (r.y + r.h > HEAD && r.y < H - FOOT));
+    // rodapé
+    const t = S.toast; if (t && performance.now() < t.until) { g.font = '25px system-ui'; const ls = wrap(g, t.text, W - 2 * PAD - 20); const hh = ls.length * 32 + 20; rr(g, PAD, H - FOOT - hh - 6, W - 2 * PAD, hh, 14, 'rgba(255,138,36,.95)'); g.fillStyle = '#111'; ls.forEach((l, i) => g.fillText(l, PAD + 14, H - FOOT - hh + 6 + i * 32)); }
+    const bw = (W - 2 * PAD - 12 * 4) / 5, by = H - FOOT + 20;
+    button(g, PAD, by, bw, 76, S.vrScale ? '🔬 Maquete' : '🌍 Imersão', () => { A.vrToggleScale && A.vrToggleScale(); V.dirty = true; });
+    button(g, PAD + (bw + 12), by, bw, 76, '🎯 Recentrar', () => A.vrRecenter && A.vrRecenter());
+    button(g, PAD + 2 * (bw + 12), by, bw, 76, '▲', () => { V.scroll = Math.max(0, V.scroll - 260); V.dirty = true; });
+    button(g, PAD + 3 * (bw + 12), by, bw, 76, '▼', () => { V.scroll = Math.min(V.max, V.scroll + 260); V.dirty = true; });
+    button(g, PAD + 4 * (bw + 12), by, bw, 76, '⏏ Sair VR', () => A.exitVR && A.exitVR(), false, '#7a2a2a');
+    if (V.hover) { g.fillStyle = '#fff'; g.beginPath(); g.arc(V.hover.x, V.hover.y, 7, 0, 7); g.fill(); }
+    V.tex.needsUpdate = true; V.dirty = false;
+  };
+
+  // uv → pixel; testa região sob o ponteiro
+  const at = (px, py) => V.regions.slice().reverse().find(r => px >= r.x && px <= r.x + r.w && py >= r.y && py <= r.y + r.h);
+  A.vrHover = function (uv) { const old = V.hover; V.hover = uv ? { x: uv.x * W, y: (1 - uv.y) * H } : null; if (!!old !== !!V.hover || (old && V.hover && (Math.abs(old.x - V.hover.x) > 4 || Math.abs(old.y - V.hover.y) > 4))) V.dirty = true; };
+  A.vrPress = function () { const p = V.hover; if (!p) return false; const r = at(p.x, p.y); if (!r) return true; if (r.kind === 'slider') { V.drag = r; r.fn((p.x - r.fr[0]) / r.fr[1] * 0 + A.clamp((p.x - r.x) / r.w, 0, 1)); } else r.fn(); return true; };
+  A.vrDragUpdate = function () { const p = V.hover; if (V.drag && p) { V.drag.fn(A.clamp((p.x - V.drag.x) / V.drag.w, 0, 1)); } };
+  A.vrRelease = function () { V.drag = null; };
+  A.vrScrollBy = dy => { V.scroll = A.clamp(V.scroll + dy, 0, V.max); V.dirty = true; };
+})();
+
+</script>
+<script type="text/x-app" data-name="main">
+/* Renderizador, câmera orbital (PC/tablet), WebXR (Pico Neo 3 e outros) e laço principal */
+(function () {
+  const T = THREE, A = APP, S = A.S;
+  let renderer, scene, camera, stage, canvas, ray, lastDraw = 0;
+  const cam = { tx: 0.5, ty: -4, tz: 0, az: 0.35, el: 0.28, dist: 27 }, des = Object.assign({}, cam);
+  const VIEWS = {
+    macro: { tx: 0.5, ty: -4, tz: 0, az: 0.35, el: 0.28, dist: 27 }, dive: { tx: -1, ty: -8, tz: -1.5, az: 0.35, el: 0.05, dist: 3.2 },
+    micro: { tx: 0, ty: 0, tz: 0, az: 0.3, el: 0.15, dist: 7.5 }, map: { tx: 0, ty: 0, tz: 0, az: 0, el: 1.2, dist: 24 }
+  };
+  // poses VR: c = ponto do modelo ancorado; s = escala; a = âncora no espaço real
+  const VRP = {
+    macro: { c: [0, -4, 0], s: 0.075, a: [0.3, 1.05, -1.6] }, macroI: { c: [3, 0.4, 4], s: 0.5, a: [0, 0, -2.8] },
+    dive: { c: [0, -7.5, 0], s: 0.5, a: [0, 1.3, 0] }, micro: { c: [0, 0, 0], s: 0.25, a: [0, 1.3, -1.1] }, map: { c: [0, 0, 0], s: 0.1, a: [0, 0.85, -0.9] }
+  };
+  const vr = { s: 0.075, c: new T.Vector3(0, -4, 0), a: new T.Vector3(0.3, 1.05, -1.6), yaw: 0, ctrls: [], panelOn: true };
+
+  A.view = () => S.step === 3 ? 'map' : (S.micro ? 'micro' : (S.dive ? 'dive' : 'macro'));
+  A.applyView = function () {
+    const v = A.view(); S.view = v; Object.assign(des, VIEWS[v]);
+    A.world.visible = v === 'macro' || v === 'dive'; A.micro.visible = v === 'micro'; A.mapG.visible = v === 'map';
+    const k = v === 'macro' && S.vrScale ? VRP.macroI : VRP[v], keepA = vr.a.clone();
+    vr.s = k.s; vr.c.set(...k.c); vr.a.set(...k.a); vr.yaw = v === 'map' ? 0 : vr.yaw; vr.sT = k.s;
+  };
+  A.resetCam = () => A.applyView();
+  A.vrToggleScale = () => { S.vrScale = !S.vrScale; A.applyView(); };
+
+  function init() {
+    canvas = document.getElementById('c');
+    renderer = new T.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setSize(innerWidth, innerHeight); renderer.xr.enabled = true;
+    scene = new T.Scene(); scene.background = new T.Color(0x0a1020); scene.fog = new T.Fog(0x0a1020, 60, 140);
+    camera = new T.PerspectiveCamera(50, innerWidth / innerHeight, 0.03, 300); scene.add(camera);
+    scene.add(new T.HemisphereLight(0xcfe2ff, 0x40303a, 0.95)); const dl = new T.DirectionalLight(0xffffff, 0.8); dl.position.set(10, 20, 16); scene.add(dl);
+    stage = new T.Group(); scene.add(stage);
+    A.initWorld(); A.initVolcano(); A.initFlow(); A.initMap(); A.initUI(); A.initVRPanel();
+    stage.add(A.world, A.micro, A.mapG);
+    const floor = new T.GridHelper(12, 24, 0x3a4a70, 0x1b2540); floor.visible = false; scene.add(floor); vr.floor = floor;
+    scene.add(A.vrp.mesh); ray = new T.Raycaster();
+    A.applyView(); Object.assign(cam, des);
+    bindPointer(); initXR();
+    addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
+    renderer.setAnimationLoop(frame);
+  }
+
+  /* ---------- órbita com mouse / toque ---------- */
+  function bindPointer() {
+    const ps = new Map(); let down = null, pinch = 0;
+    canvas.addEventListener('contextmenu', e => e.preventDefault());
+    canvas.addEventListener('pointerdown', e => { canvas.setPointerCapture(e.pointerId); ps.set(e.pointerId, { x: e.clientX, y: e.clientY }); down = { x: e.clientX, y: e.clientY, t: performance.now(), n: ps.size }; if (ps.size === 2) { const [a, b] = [...ps.values()]; pinch = Math.hypot(a.x - b.x, a.y - b.y); } });
+    canvas.addEventListener('pointermove', e => {
+      const p = ps.get(e.pointerId); if (!p) return; const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
+      if (ps.size === 1 && !(e.buttons & 2) && !e.shiftKey) { des.az -= dx * 0.006; des.el = A.clamp(des.el + dy * 0.006, -1.4, 1.5); }
+      else if (ps.size === 1) pan(dx, dy);
+      else if (ps.size === 2) { const [a, b] = [...ps.values()], d = Math.hypot(a.x - b.x, a.y - b.y); des.dist = A.clamp(des.dist * pinch / Math.max(d, 1), 1.5, 70); pinch = d; pan(dx / 2, dy / 2); }
+    });
+    const up = e => {
+      const m = ps.has(e.pointerId); ps.delete(e.pointerId);
+      if (m && down && down.n === 1 && performance.now() - down.t < 450 && Math.hypot(e.clientX - down.x, e.clientY - down.y) < 6 && A.view() === 'map') mapPick(e.clientX, e.clientY);
+    };
+    canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
+    canvas.addEventListener('wheel', e => { e.preventDefault(); des.dist = A.clamp(des.dist * (1 + Math.sign(e.deltaY) * 0.09), 1.5, 70); }, { passive: false });
+  }
+  function pan(dx, dy) {
+    const k = cam.dist * 0.0015, r = new T.Vector3().setFromMatrixColumn(camera.matrix, 0), u = new T.Vector3().setFromMatrixColumn(camera.matrix, 1);
+    des.tx += (-r.x * dx + u.x * dy) * k; des.ty += (-r.y * dx + u.y * dy) * k; des.tz += (-r.z * dx + u.z * dy) * k;
+  }
+  function mapPick(x, y) {
+    ray.setFromCamera({ x: x / innerWidth * 2 - 1, y: -(y / innerHeight) * 2 + 1 }, camera);
+    const h = ray.intersectObject(A.mapMesh)[0]; if (h) { const p = A.mapG.worldToLocal(h.point.clone()); A.map.click(p.x, p.z); }
+  }
+
+  /* ---------- WebXR (Pico Neo 3: navegador Pico, HTTPS) ---------- */
+  const lerpV = (a, b, k) => a + (b - a) * k;
+  function initXR() {
+    const btn = document.getElementById('vrBtn'), msg = document.getElementById('vrMsg');
+    if (!navigator.xr) { btn.disabled = true; btn.textContent = 'VR indisponível'; msg.textContent = 'WebXR não encontrado: abra por HTTPS no Navegador Pico (ou Chrome/Edge com WebXR).'; return; }
+    navigator.xr.isSessionSupported('immersive-vr').then(ok => {
+      btn.textContent = ok ? '🥽 Entrar em VR' : 'VR indisponível neste dispositivo'; btn.disabled = !ok;
+      if (!ok) msg.textContent = 'Este navegador não oferece sessões immersive-vr. No Pico Neo 3 use o Navegador Pico via HTTPS.';
+    }).catch(() => { btn.disabled = true; });
+    btn.onclick = async () => {
+      try {
+        if (renderer.xr.isPresenting) { A.exitVR(); return; }
+        const s = await navigator.xr.requestSession('immersive-vr', { optionalFeatures: ['local-floor', 'bounded-floor'] });
+        renderer.xr.setReferenceSpaceType('local-floor'); await renderer.xr.setSession(s); onStart(s);
+      } catch (e) { msg.textContent = 'Falha ao iniciar VR: ' + (e.message || e); }
+    };
+    for (let i = 0; i < 2; i++) {
+      const c = renderer.xr.getController(i); c.userData = { i, pressed: false };
+      const l = new T.Line(new T.BufferGeometry().setFromPoints([new T.Vector3(), new T.Vector3(0, 0, -3)]), new T.LineBasicMaterial({ color: 0xffd37a })); l.name = 'ray'; c.add(l);
+      const dot = new T.Mesh(new T.SphereGeometry(0.012), new T.MeshBasicMaterial({ color: 0xffffff })); dot.position.z = -0.05; c.add(dot);
+      c.addEventListener('connected', e => { c.userData.src = e.data; });
+      c.addEventListener('selectstart', () => { c.userData.pressed = true; onSelect(c); });
+      c.addEventListener('selectend', () => { c.userData.pressed = false; A.vrRelease(); });
+      scene.add(c); vr.ctrls.push(c);
+    }
+  }
+  function onStart(session) {
+    S.vr = true; vr.floor.visible = true; A.vrp.mesh.visible = true; A.applyView(); A.vrRecenter(); A.vrp.dirty = true;
+    session.addEventListener('end', () => { S.vr = false; vr.floor.visible = false; A.vrp.mesh.visible = false; stage.position.set(0, 0, 0); stage.scale.setScalar(1); stage.rotation.set(0, 0, 0); document.getElementById('vrBtn').textContent = '🥽 Entrar em VR'; });
+    document.getElementById('vrBtn').textContent = '⏏ Sair do VR';
+  }
+  A.exitVR = () => { const s = renderer.xr.getSession(); s && s.end(); };
+  A.vrRecenter = function () {
+    const xc = renderer.xr.getCamera(camera), p = new T.Vector3(), d = new T.Vector3(0, 0, -1);
+    p.setFromMatrixPosition(xc.matrixWorld); d.applyQuaternion(xc.quaternion || camera.quaternion); d.y = 0; if (d.lengthSq() < 1e-4) d.set(0, 0, -1); d.normalize();
+    const yaw = Math.atan2(-d.x, -d.z), m = A.vrp.mesh;
+    m.position.set(p.x + Math.sin(-yaw - 0.55) * 0.0 + (-Math.sin(yaw + 0.55)) * 0.95, Math.max(1.1, p.y - 0.05), p.z + (-Math.cos(yaw + 0.55)) * 0.95); m.rotation.set(0, yaw + 0.55, 0);
+  };
+  A.haptic = function (s, ms) { vr.ctrls.forEach(c => { try { const g = c.userData.src && c.userData.src.gamepad; const a = g && (g.hapticActuators && g.hapticActuators[0]); if (a && a.pulse) a.pulse(s, ms); else if (g && g.vibrationActuator) g.vibrationActuator.playEffect('dual-rumble', { duration: ms, strongMagnitude: s, weakMagnitude: s }); } catch (e) {} }); };
+
+  function hitPanel(c) {
+    const o = new T.Vector3(), d = new T.Vector3(0, 0, -1), m = new T.Matrix4().extractRotation(c.matrixWorld);
+    o.setFromMatrixPosition(c.matrixWorld); d.applyMatrix4(m); ray.set(o, d); ray.far = 6; ray.camera = camera;
+    return { o, d, hp: A.vrp.mesh.visible ? ray.intersectObject(A.vrp.mesh)[0] : null };
+  }
+  function onSelect(c) {
+    const r = hitPanel(c);
+    if (r.hp) { A.vrHover(r.hp.uv); A.vrPress(); A.vrp.dirty = true; return; }
+    if (A.view() === 'map') { const h = ray.intersectObject(A.mapMesh)[0]; if (h) { const p = A.mapG.worldToLocal(h.point.clone()); A.map.click(p.x, p.z); } }
+  }
+  let prevB = {};
+  function xrInput(dt) {
+    let hover = null, lenAll = 3;
+    vr.ctrls.forEach(c => {
+      const r = hitPanel(c), line = c.getObjectByName('ray');
+      if (r.hp && (!hover || c.userData.pressed)) hover = r.hp.uv; line.scale.z = r.hp ? r.hp.distance / 3 : 1;
+      const src = c.userData.src, g = src && src.gamepad; if (!g) return;
+      const ax = g.axes.length >= 4 ? [g.axes[2], g.axes[3]] : [g.axes[0] || 0, g.axes[1] || 0], dz = v => Math.abs(v) > 0.18 ? v : 0, X = dz(ax[0]), Y = dz(ax[1]), left = src.handedness === 'left';
+      const pb = prevB[c.userData.i] || (prevB[c.userData.i] = {}), btn = i => g.buttons[i] && g.buttons[i].pressed, edge = (i, fn) => { const n = btn(i); if (n && !pb[i]) fn(); pb[i] = n; };
+      edge(4, () => A.vrToggleScale()); edge(5, () => { A.vrp.mesh.visible = !A.vrp.mesh.visible; }); edge(1, () => A.vrRecenter());
+      if (r.hp && Y) A.vrScrollBy(Y * 900 * dt);
+      else if (S.view === 'macro' && S.vrScale || S.view === 'dive') { // voo livre
+        if (left) { const f = new T.Vector3(); renderer.xr.getCamera(camera).getWorldDirection(f); const sp = 2.2 * dt; vr.a.x -= f.x * -Y * sp * -1 * -1; vr.a.y -= f.y * -Y * sp * -1 * -1; vr.a.z -= f.z * -Y * sp * -1 * -1; vr.a.x -= 0; }
+        else vr.yaw += X * dt * 1.2;
+      } else { if (!left) vr.yaw += X * dt * 1.2; else { vr.a.y = A.clamp(vr.a.y - Y * dt * 0.5, 0.4, 2); } }
+    });
+    A.vrHover(hover); A.vrDragUpdate();
+    // aplica pose do palco (suavizada)
+    const k = Math.min(1, dt * 4), sc = lerpV(stage.scale.x, vr.s, k), off = vr.c.clone().multiplyScalar(sc).applyAxisAngle(new T.Vector3(0, 1, 0), vr.yaw);
+    stage.scale.setScalar(sc); stage.rotation.y = vr.yaw; stage.position.lerp(vr.a.clone().sub(off), k);
+  }
+
+  /* ---------- laço principal ---------- */
+  let last = performance.now(), t0 = last;
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now; const t = (now - t0) / 1000, v = A.view();
+    const pres = renderer.xr.isPresenting;
+    if (v === 'macro' || v === 'dive') { A.worldUpdate(dt, t); A.volcanoUpdate(dt, t); A.flowUpdate(dt, t); }
+    else if (v === 'micro') A.flowUpdate(dt, t);
+    else if (v === 'map') { A.mapUpdate(dt); A.volcanoUpdate(dt, t); }
+    A.uiUpdate(dt);
+    if (pres) { xrInput(dt); if (A.dirty || A.vrp.dirty || now - lastDraw > 300) { A.drawVRPanel(); lastDraw = now; A.dirty = false; } }
+    else {
+      A.dirty = false; const k = Math.min(1, dt * 5);
+      for (const key of ['tx', 'ty', 'tz', 'az', 'el', 'dist']) cam[key] += (des[key] - cam[key]) * k;
+      const ce = Math.cos(cam.el); camera.position.set(cam.tx + cam.dist * Math.sin(cam.az) * ce, cam.ty + cam.dist * Math.sin(cam.el), cam.tz + cam.dist * Math.cos(cam.az) * ce);
+      camera.lookAt(cam.tx, cam.ty, cam.tz);
+    }
+    renderer.render(scene, camera);
+  }
+  window.addEventListener('error', e => { const m = document.getElementById('vrMsg'); if (m) m.textContent = 'Erro: ' + e.message; });
+  document.readyState === 'complete' ? init() : addEventListener('load', init);
+})();
+
+</script>
+</body>
+</html>
